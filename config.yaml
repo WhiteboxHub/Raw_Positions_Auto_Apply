@@ -1,0 +1,63 @@
+# SmartApply Configuration File (YAML)
+# This file contains all configurable options for the email automation tool.
+# Command-line arguments override these settings.
+
+# Gmail Configuration
+gmail:
+  use_api: true
+  # Randomized delay between emails (anti-spam jitter — looks human)
+  email_delay_min_seconds: 30 # minimum seconds to wait between emails
+  email_delay_max_seconds: 60 # maximum seconds to wait between emails
+  # Cooldown: pause every N emails to avoid rate-limit detection
+  cooldown_every_n_emails: 10
+  cooldown_min_seconds: 180 # 3 minutes
+  cooldown_max_seconds: 300 # 5 minutes
+  rate_limit_per_minute: 2 # ~1 email per 30-60s
+
+# Ollama Configuration (Local LLM)
+ollama:
+  base_url: http://localhost:11434
+  model: llama3.2:3b
+  # Per-attempt timeouts — shrink each retry so total fits in 60s window
+  timeout_seconds: 40 # Attempt 1: full budget, detailed prompt
+  retry_timeout_seconds: 12 # Attempt 2: simpler prompt, faster
+  minimal_timeout_seconds: 8 # Attempt 3: bare-bones prompt, very fast
+  max_retries: 3 # API-level retries (connection/HTTP errors)
+  llm_quality_retries: 3 # Quality-check retries (bad output)
+  retry_backoff_multiplier: 2
+
+# Input File
+input:
+  csv_filename: sample_jobs.csv # Filename in input/ directory (e.g., jobs.csv)
+  column_mapping:
+    email: "Contact Info" # CSV column name for email
+    title: "Title" # CSV column name for job title/role
+    description: "Description" # CSV column name for job description
+
+# Email Processing
+email_processing:
+  email_limit: 55 # max emails per run
+  daily_cap: 100 # max emails per day per user (prevents Gmail 500/day limit)
+  dry_run: false
+  test_mode: false
+  skip_llm: false
+  force_resend: false
+  user_confirmation_before_send: false # Ask user Y/N before sending each email (set to false once emails are perfect)
+
+# Resume Configuration
+resume:
+  json_path: null # auto-detect first .json file in resume/ directory
+  pdf_path: null # auto-detect first .pdf file in resume/ directory
+
+# File Paths
+file_paths:
+  input_dir: input
+  output_dir: logs
+  sent_emails_db: data/sent_emails.json
+  app_log: logs/app.log
+  error_log: logs/error.log
+
+# Logging
+logging:
+  level: INFO # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

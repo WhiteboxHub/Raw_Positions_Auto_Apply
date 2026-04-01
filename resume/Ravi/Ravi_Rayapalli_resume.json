@@ -1,0 +1,184 @@
+{
+  "cv": {
+    "name": "Ravi Kumar Rayapalli",
+    "location": "Dublin, CA",
+    "email": "ravirayapalli30@gmail.com",
+    "phone": "(706) 590-7391",
+    "social_networks": [
+      {
+        "network": "LinkedIn",
+        "username": "ravi-rayapalli"
+      },
+      {
+        "network": "GitHub",
+        "username": "ravi-30"
+      }
+    ],
+    "sections": {
+      "experience": [
+        {
+          "company": "Optum (UHG)",
+          "position": "AI Engineer",
+          "date": {
+            "start_date": "2026-02",
+            "end_date": null
+          },
+          "location": "Dublin, CA",
+          "summary": "",
+          "highlights": [
+            "Contributed to a RAG-based legal document intelligence system processing large-scale unstructured data.",
+            "Improved retrieval quality via hybrid search (embeddings + keyword) and graph-based context expansion (Neo4j).",
+            "Implemented retrieval validation and grounding strategies to reduce hallucinations.",
+            "Optimized LLM performance using prompt tuning, caching, and batching.",
+            "Built streaming pipelines with Pub/Sub and BigQuery for near real-time updates."
+          ]
+        },
+        {
+          "company": "Talent Screen",
+          "position": "AI Engineer Intern",
+          "date": {
+            "start_date": "2025-07",
+            "end_date": "2026-02"
+          },
+          "location": "Dublin, CA",
+          "summary": "",
+          "highlights": [
+            "Built the Maya Talent Agent, an end-to-end LLM system for candidate intake, evaluation, and interview orchestration.",
+            "Designed state-machine driven workflows (LangGraph) for multi-stage evaluation with controlled reasoning.",
+            "Developed resume ingestion and structured parsing pipelines using Unstructured.io and schema validation.",
+            "Engineered candidate scoring and gap analysis combining LLM reasoning, rule-based validation, and hybrid retrieval (BM25 + embeddings).",
+            "Built semantic search and QA systems using RAG pipelines and vector search (FAISS, Milvus, ChromaDB).",
+            "Integrated external tools via API orchestration, enabling automated interview scheduling.",
+            "Implemented fault-tolerant pipelines with retries, fallbacks, and validation checks.",
+            "Established evaluation and observability framework using RAGAS, BERTScore, logging, and human feedback."
+          ]
+        },
+        {
+          "company": "EY",
+          "position": "Senior Software Engineer",
+          "date": {
+            "start_date": "2020-12",
+            "end_date": "2023-07"
+          },
+          "location": "",
+          "summary": "",
+          "highlights": [
+            "Led the design and development of distributed backend systems and data platforms, driving scalability, reliability, and maintainability.",
+            "Architected and deployed microservices and cloud-native solutions, optimizing resource utilization and system performance.",
+            "Built large-scale data pipelines and ETL workflows, processing hundreds of GBs daily.",
+            "Implemented monitoring, performance tuning, and observability strategies, reducing system latency.",
+            "Established CI/CD pipelines and automated testing frameworks, accelerating development cycles by ~30%.",
+            "Mentored engineers and conducted design reviews to foster technical excellence and best practices."
+          ]
+        },
+        {
+          "company": "Aituristic Software Pvt Ltd",
+          "position": "Software Engineer",
+          "date": {
+            "start_date": "2018-02",
+            "end_date": "2020-11"
+          },
+          "location": "",
+          "summary": "",
+          "highlights": [
+            "Developed backend services and RESTful APIs using Python and Java for scalable applications.",
+            "Built end-to-end data pipelines for ingestion, transformation, and processing.",
+            "Implemented microservices architectures with modular design and optimized performance.",
+            "Optimized SQL queries and indexing strategies, improving database efficiency by ~15%.",
+            "Integrated third-party APIs and messaging systems enabling near real-time workflows.",
+            "Created automation scripts and validation workflows, reducing manual effort and improving data accuracy."
+          ]
+        },
+        {
+          "company": "Innovapath IT Solutions",
+          "position": "Software Engineer",
+          "date": {
+            "start_date": "2017-05",
+            "end_date": "2018-01"
+          },
+          "location": "",
+          "summary": "",
+          "highlights": [
+            "Developed backend services and REST APIs enabling scalable and maintainable applications.",
+            "Designed and optimized SQL queries and database schemas, improving storage efficiency by ~15%.",
+            "Built data preprocessing and transformation pipelines supporting analytics workflows.",
+            "Contributed to testing, debugging, and code reviews to ensure system reliability."
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "label": "Programming Languages",
+          "details": "Python, SQL, JavaScript, TypeScript, Java"
+        },
+        {
+          "label": "AI & LLM Frameworks",
+          "details": "Google ADK, LangChain, LangGraph, LlamaIndex, Hugging Face Transformers, Pydantic"
+        },
+        {
+          "label": "Machine Learning",
+          "details": "PyTorch, Scikit-learn, MLflow, Feature Engineering, Model Evaluation"
+        },
+        {
+          "label": "RAG & Retrieval Systems",
+          "details": "Vector Databases, Milvus, Semantic Search, Embeddings, Hybrid Retrieval, BM25"
+        },
+        {
+          "label": "LLM Platforms",
+          "details": "Vertex AI (Gemini), OpenAI, Anthropic Claude, LLaMA, Mistral, AWS Bedrock"
+        },
+        {
+          "label": "Data Engineering",
+          "details": "Apache Airflow, Apache Spark, Apache Kafka, Apache Flink, Databricks, Snowflake"
+        },
+        {
+          "label": "Cloud & DevOps",
+          "details": "GCP (GKE, Cloud Run, Pub/Sub), AWS (EKS, Lambda, EC2, S3), Docker, Kubernetes, CI/CD"
+        },
+        {
+          "label": "Databases",
+          "details": "PostgreSQL, MongoDB, Neo4j, Amazon RDS"
+        }
+      ],
+      "education": [
+        {
+          "institution": "Cleveland State University",
+          "area": "Information Systems",
+          "degree": "Master of Science",
+          "date": {
+            "start_date": "",
+            "end_date": "2025-05"
+          },
+          "location": "Cleveland, OH, USA",
+          "summary": ""
+        }
+      ],
+      "certifications": [
+        {
+          "name": "Azure AI Fundamentals (AI-900)",
+          "issued": "",
+          "expires": "",
+          "credential_id": "",
+          "url": "",
+          "notes": ""
+        },
+        {
+          "name": "Azure Developer (AZ-204)",
+          "issued": "",
+          "expires": "",
+          "credential_id": "",
+          "url": "",
+          "notes": ""
+        },
+        {
+          "name": "CompTIA Security+",
+          "issued": "",
+          "expires": "",
+          "credential_id": "",
+          "url": "",
+          "notes": ""
+        }
+      ]
+    }
+  }
+}

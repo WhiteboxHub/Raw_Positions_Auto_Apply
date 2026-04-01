@@ -1,0 +1,155 @@
+{
+  "cv": {
+    "name": "Bavish Kangari",
+    "location": "San Francisco",
+    "email": "bavishkangari13@gmail.com",
+    "phone": "+1-510-265-9100",
+    "social_networks": [
+      {
+        "network": "LinkedIn",
+        "username": "bavish-sai-reddy-kangari-a74203193"
+      }
+    ],
+    "sections": {
+      "experience": [
+        {
+          "company": "Optum",
+          "position": "AI Engineer",
+          "date": {
+            "start_date": "2025-12",
+            "end_date": null
+          },
+          "location": "San Francisco, CA",
+          "summary": "",
+          "highlights": [
+            "Built agentic contract intelligence platform on Google Cloud using Document AI, Cloud Storage, and Vertex AI, extracting reimbursement terms, obligations, and SLAs from payer-provider contracts.",
+            "Orchestrated multi-agent systems using Google ADK with A2A communication and MCP tool integration, enabling scalable parsing, reasoning, and retrieval workflows.",
+            "Designed RAG architecture with hybrid retrieval over Neo4j knowledge graph and Vertex AI embeddings, improving clause-level search relevance and contextual grounding.",
+            "Modeled domain ontologies and implemented a Neo4j knowledge graph with node-level embeddings to capture contract entities, relationships, and semantic context.",
+            "Developed conversational and retrieval agents supporting multi-turn reasoning and grounded responses across enterprise legal datasets.",
+            "Leveraged Gemini 3.1 Pro for long-context reasoning, Gemini Flash for low-latency inference, and Text2SQL pipelines for natural language to structured query generation.",
+            "Implemented prompt chaining, intent-aware routing, and planning pipelines to dynamically select agents, tools, and retrieval strategies based on task context.",
+            "Built evaluation and monitoring pipelines using DeepEval, Langfuse, and Promptfoo with CI/CD integration, ensuring output quality and traceability.",
+            "Deployed containerized FastAPI services using Docker on Cloud Run and GKE, enabling scalable, low-latency inference.",
+            "Collaborated on fine-tuning workflows using customer support logs to improve classification of contract issues and enhance downstream agent accuracy.",
+            "Developed classification pipelines for customer interaction data, enabling automated detection and categorization of contract disputes.",
+            "Built user-facing interfaces using lovable.dev for conversational querying, contract exploration, and analytics visualization."
+          ]
+        },
+        {
+          "company": "Innovapath INC - TalentScreen",
+          "position": "AI Engineer",
+          "date": {
+            "start_date": "2024-07",
+            "end_date": "2025-11"
+          },
+          "location": "Dublin, CA",
+          "summary": "",
+          "highlights": [
+            "Built ScreenIQ, a recruiter copilot agent using LangGraph and LangChain, orchestrating multi-node decision workflows for candidate screening, ranking, and hiring recommendations.",
+            "Designed a modular three-layer architecture (Data, Retrieval/Ranking, Reasoning) enabling scalable agent pipelines with MCP tool integration and semantic guardrails.",
+            "Implemented LLM-driven intent and task parsing using Claude 3.5 Sonnet on Amazon Bedrock, decomposing recruiter queries into structured actions for search and evaluation.",
+            "Developed hybrid retrieval pipelines using Milvus, combining dense embeddings from Sentence Transformers with keyword search and Cross-Encoder reranking.",
+            "Engineered vector storage in Milvus with specialized indexes for resumes, skills, and recruiter interactions to enable high-recall candidate matching.",
+            "Built automated ingestion and parsing pipelines using Unstructured.io and Docling, generating normalized candidate profiles with structured schema extraction.",
+            "Created an interaction memory layer capturing recruiter feedback and hiring signals, enabling feedback-aware retrieval and ranking.",
+            "Implemented candidate ranking pipelines using embedding similarity, feature scoring, and Cross-Encoder reranking models.",
+            "Developed evaluation pipelines using Ragas and BERTScore, measuring retriever performance and validating generation quality.",
+            "Built skill gap analysis using semantic comparison between candidate embeddings and job descriptions to identify missing skills and risk areas.",
+            "Generated role-specific interview questions using LLM prompting, aligned to candidate gaps and job requirements.",
+            "Designed reasoning nodes that synthesize retrieval outputs and historical signals to produce evidence-backed hiring recommendations and confidence scores.",
+            "Integrated guardrails and bias checks within evaluation pipelines to ensure fair and consistent candidate assessment.",
+            "Delivered structured recruiter insights including strengths, gaps, and risk flags through agent-driven outputs.",
+            "Deployed scalable backend services using FastAPI on AWS (EKS, Lambda, API Gateway) with a React-based UI for recruiter interaction."
+          ]
+        },
+        {
+          "company": "Innovapath IT Solutions",
+          "position": "MLOps Intern",
+          "date": {
+            "start_date": "2022-01",
+            "end_date": "2023-06"
+          },
+          "location": "Hyderabad, India",
+          "summary": "",
+          "highlights": [
+            "Engineered and maintained automated CI/CD pipelines for machine learning workflows using Jenkins and GitHub Actions, enabling seamless model testing, linting, and deployment.",
+            "Containerized complex machine learning models and data processing pipelines using Docker, ensuring environment parity between local development and scalable production deployments.",
+            "Implemented comprehensive ML experiment tracking, hyperparameter logging, and model versioning using MLflow, establishing a culture of reproducible model development.",
+            "Architected robust data validation and reconciliation frameworks to ensure strict parity and data integrity when migrating pipelines from legacy on-premise stores to Databricks.",
+            "Developed automated monitoring scripts to continuously track data distributions, detecting inference data drift and performance degradation to trigger automated retraining.",
+            "Streamlined local development environments by standardizing configuration scripts using Zsh and Visual Studio Code, significantly accelerating engineering onboarding.",
+            "Developed Infrastructure as Code (IaC) scripts using Terraform to provision and manage reproducible cloud resources, ensuring consistent environment setup across development, staging, and production.",
+            "Implemented automated unit and integration testing for ML pipelines using Pytest, validating data schemas and model input/output shapes to prevent breaking changes in the production registry."
+          ]
+        },
+        {
+          "company": "Allsoft Solutions",
+          "position": "ML Engineer Intern",
+          "date": {
+            "start_date": "2021-01",
+            "end_date": "2021-06"
+          },
+          "location": "India",
+          "summary": "",
+          "highlights": [
+            "Engineered custom predictive features and managed complex missing data imputations using Pandas and NumPy, conducting thorough Exploratory Data Analysis (EDA) to reduce noise and establish robust baseline models.",
+            "Developed robust machine learning classification models for predictive analytics tasks using Scikit-learn and Python, experimenting heavily with ensemble methods such as Bagging and Random Forest classifiers.",
+            "Evaluated model splits and feature importance by analyzing statistical metrics including Entropy and Gini Impurity to optimize decision tree performance on highly imbalanced datasets.",
+            "Built and documented scalable REST APIs using FastAPI to securely serve machine learning model predictions to downstream internal dashboards.",
+            "Authored comprehensive technical documentation and interactive API specifications using Swagger UI, facilitating seamless and rapid integration for frontend development teams.",
+            "Implemented rigorous model validation strategies using K-Fold Cross-Validation and Stratified Sampling, utilizing Precision-Recall curves and F1-Score metrics to ensure model reliability on skewed real-world data."
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "label": "Programming Languages",
+          "details": "Python, SQL, Bash, JavaScript, Java"
+        },
+        {
+          "label": "AI & Agentic Frameworks",
+          "details": "LangGraph, LangChain, Google ADK, Model Context Protocol (MCP), Vertex AI, Amazon Bedrock, Gemini 3.1, Claude 3.5, OpenAI"
+        },
+        {
+          "label": "Machine Learning & NLP",
+          "details": "PyTorch, TensorFlow, Scikit-learn, HuggingFace, spaCy, Pandas, NumPy, Ensemble Methods, Fine-tuning"
+        },
+        {
+          "label": "RAG & Knowledge Graphs",
+          "details": "GraphRAG, Neo4j (Cypher), Hybrid Retrieval, Semantic Chunking, Cross-Encoder Reranking, Docling, Unstructured.io"
+        },
+        {
+          "label": "Vector Databases",
+          "details": "Milvus, FAISS, Pinecone, ChromaDB, Redis, DuckDB"
+        },
+        {
+          "label": "Evaluation & Monitoring",
+          "details": "DeepEval, Langfuse, Promptfoo, Ragas, BERTScore, LLM-as-Judge, Guardrails, Data Drift Detection"
+        },
+        {
+          "label": "MLOps & Data Engineering",
+          "details": "Apache Airflow, Databricks, MLflow, Document AI, CI/CD for ML, Feature Engineering"
+        },
+        {
+          "label": "Cloud & DevOps",
+          "details": "GCP (GKE, Cloud Run), AWS (EKS, Lambda, API Gateway), Docker, Kubernetes, GitHub Actions, Jenkins, Terraform, Git"
+        }
+      ],
+      "education": [
+        {
+          "institution": "California State University East Bay",
+          "area": "Computer Science",
+          "degree": "M.S.",
+          "date": {
+            "start_date": "2023-08",
+            "end_date": "2025-05"
+          },
+          "location": "Hayward, CA, USA",
+          "summary": ""
+        }
+      ],
+      "certifications": []
+    }
+  }
+}

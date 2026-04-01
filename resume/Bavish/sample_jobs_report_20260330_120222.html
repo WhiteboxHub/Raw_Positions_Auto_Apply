@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartApply Execution Report</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f9fafb; color: #111827; padding: 40px; margin: 0; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        h1 { color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+        .metrics { display: flex; gap: 20px; margin: 20px 0; }
+        .metric-card { background: #f3f4f6; padding: 20px; border-radius: 8px; flex: 1; text-align: center; }
+        .metric-card h3 { margin: 0; color: #6b7280; font-size: 0.9rem; text-transform: uppercase; }
+        .metric-card p { margin: 10px 0 0 0; font-size: 2rem; font-weight: bold; color: #111827; }
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        th { background: #f9fafb; padding: 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SmartApply Run Report</h1>
+        <p style="color: #6b7280;">Execution Timestamp: 20260330_120222</p>
+        
+        <div class="metrics">
+            <div class="metric-card"><h3>Total Processed</h3><p>50</p></div>
+            <div class="metric-card"><h3>Sent</h3><p style="color: #10b981;">48</p></div>
+            <div class="metric-card"><h3>Skipped</h3><p style="color: #f59e0b;">78</p></div>
+            <div class="metric-card"><h3>Failed</h3><p style="color: #ef4444;">2</p></div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Precisiontechcorp</td>
+                <td style="padding: 12px;">Email: rita.k@precisiontechcorp.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">FAILED</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;">'EmailGeneratorService' object has no attribute '_append_social_links'</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Realtechservices</td>
+                <td style="padding: 12px;">Email: raj@realtechservices.co, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Realtechservices</td>
+                <td style="padding: 12px;">Email: adona.r@realtechservices.co, Phone: 7323333690</td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Recruiter.Nlbtech</td>
+                <td style="padding: 12px;">Email: mohd.alam@recruiter.nlbtech.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Recruitmenthub365</td>
+                <td style="padding: 12px;">Email: sneha@recruitmenthub365.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Redleosoft</td>
+                <td style="padding: 12px;">Email: amit@redleosoft.com, Phone: 1 302-696-0905</td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Resonancesearch</td>
+                <td style="padding: 12px;">Email: teagan@resonancesearch.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">FAILED</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;">'EmailGeneratorService' object has no attribute '_append_social_links'</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Resource-Logistics</td>
+                <td style="padding: 12px;">Email: -aaron@resource-logistics.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Resource-Logistics</td>
+                <td style="padding: 12px;">Email: aaron@resource-logistics.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Rits-It</td>
+                <td style="padding: 12px;">Email: lavanya.kondaveeti@rits-it.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Rits-It</td>
+                <td style="padding: 12px;">Email: srikanth.kalyanam@rits-it.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Rits-It</td>
+                <td style="padding: 12px;">Email: charan@rits-it.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Rivagoinfotech</td>
+                <td style="padding: 12px;">Email: sushmita_upadhyay@rivagoinfotech.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">S2Globalsolutions</td>
+                <td style="padding: 12px;">Email: y.anu@s2globalsolutions.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sapphiresoftwaresolutions</td>
+                <td style="padding: 12px;">Email: rachana@sapphiresoftwaresolutions.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sapphiresoftwaresolutions</td>
+                <td style="padding: 12px;">Email: praveen@sapphiresoftwaresolutions.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sapphiresoftwaresolutions</td>
+                <td style="padding: 12px;">Email: karthik@sapphiresoftwaresolutions.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Saranshinc</td>
+                <td style="padding: 12px;">Email: ramadevi.m@saranshinc.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Savantisintelli</td>
+                <td style="padding: 12px;">Email: maheshwari@savantisintelli.com, Phone: 1 469-498-0932</td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sciencephalon</td>
+                <td style="padding: 12px;">Email: raj@sciencephalon.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sdhsystems</td>
+                <td style="padding: 12px;">Email: saikiran@sdhsystems.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sensiple</td>
+                <td style="padding: 12px;">Email: kiruthika.k@sensiple.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sidramtech</td>
+                <td style="padding: 12px;">Email: steve@sidramtech.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sidramtech</td>
+                <td style="padding: 12px;">Email: roger@sidramtech.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sierraconsult</td>
+                <td style="padding: 12px;">Email: satishk@sierraconsult.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sightspectrum</td>
+                <td style="padding: 12px;">Email: vikneshkumar@sightspectrum.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Signinsol</td>
+                <td style="padding: 12px;">Email: m.arshi@signinsol.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Signitives</td>
+                <td style="padding: 12px;">Email: jayanth.sai@signitives.net, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Siliconspectra</td>
+                <td style="padding: 12px;">Email: uma@siliconspectra.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sinfralogix</td>
+                <td style="padding: 12px;">Email: naveen.y@sinfralogix.com, Phone: 1 (469)-290-0399</td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Siraconsultinginc</td>
+                <td style="padding: 12px;">Email: akhil.k@siraconsultinginc.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sirass</td>
+                <td style="padding: 12px;">Email: suchitra@sirass.us, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sirass</td>
+                <td style="padding: 12px;">Email: john@sirass.us, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Siriinfoinc</td>
+                <td style="padding: 12px;">Email: venkat.g@siriinfoinc.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Smartitframe</td>
+                <td style="padding: 12px;">Email: neeraj@smartitframe.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Smarttechlink</td>
+                <td style="padding: 12px;">Email: tania.c@smarttechlink.com, Phone: 1 (224) 292-5667</td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Smarttechlink</td>
+                <td style="padding: 12px;">Email: sameer.bhan@smarttechlink.com, Phone: 1 217-803-7835</td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Softtunetech</td>
+                <td style="padding: 12px;">Email: laxmi@softtunetech.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Softtunetech</td>
+                <td style="padding: 12px;">Email: pravalika@softtunetech.com, Phone: 6304018613</td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sourcemantra</td>
+                <td style="padding: 12px;">Email: hemanth@sourcemantra.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Squadsoftwares</td>
+                <td style="padding: 12px;">Email: kushal.a@squadsoftwares.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sritechsolutions</td>
+                <td style="padding: 12px;">Email: bharathi.p@sritechsolutions.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Sritechsolutions</td>
+                <td style="padding: 12px;">Email: swathi.u@sritechsolutions.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Stellarwins</td>
+                <td style="padding: 12px;">Email: jaanvi.c@stellarwins.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Swartek</td>
+                <td style="padding: 12px;">Email: divya.myla@swartek.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Synkriom</td>
+                <td style="padding: 12px;">Email: rahulk.singh@synkriom.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Synstacktech</td>
+                <td style="padding: 12px;">Email: mahesh.k@synstacktech.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Systemedge</td>
+                <td style="padding: 12px;">Email: rahul@systemedge.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Tech-Apex</td>
+                <td style="padding: 12px;">Email: ajay@tech-apex.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">Tech9Itsolutions</td>
+                <td style="padding: 12px;">Email: vineesha@tech9itsolutions.com, Phone: </td>
+                <td style="padding: 12px;"><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">SUCCESS</span></td>
+                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
