@@ -37,9 +37,11 @@ class ResumeHandler:
             
             name = ResumeHandler._extract_name(raw_data)
             skills = ResumeHandler._extract_skills(raw_data)
+            total_experience = raw_data.get("cv", {}).get("total_experience", "")
             
             resume.data = ResumeData(
                 name=name,
+                total_experience=total_experience,
                 skills=skills,
                 raw_data=raw_data
             )

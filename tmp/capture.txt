@@ -1,0 +1,50 @@
+Task: Draft a professional job application email based strictly on the provided candidate data and job description.
+
+REQUIRED PERSONA: Professional Email Drafter. Use a direct, polite, and factual tone.
+
+INSTRUCTIONS:
+1. BREVITY: Keep the entire email body under 75 words.
+2. SOURCE MATERIAL: Use only the candidate's verified experience provided below. Do not invent skills or history.
+3. CONTEXT: Focus on the matching technologies between the candidate and the job posting.
+4. TARGET: Direct the application to the company.
+5. GREETING: Use the greeting exactly as provided below.
+6. EXPERIENCE: If mentioning total years of experience, you MUST state exactly "9+ years" as provided in the resume. Never mirror the job posting's required years.
+
+JOB POSTING:
+Looking for a senior AI engineer with 15+ years of experience.
+
+CANDIDATE EXPERIENCE OPTIONS:
+- Optum [CURRENT ROLE]: AI Engineer. Key work: Contributed to ContractAI, customer care log classification, and several other AI initiatives, building intelligent systems for document understanding, knowledge retrieval, and workflow automation.
+- Innovapath INC - TalentScreen [PAST ROLE]: AI Engineer. Key work: Built an AI powered talent management platform using Retrieval Augmented Generation and multi agent orchestration to standardize hiring workflows, reduce bias, and decrease time to hire.
+- Wipro Limited [PAST ROLE]: Developer Analyst I / MLOps. Key work: Designed and maintained offline and online feature pipelines, including schema validation, time-based aggregations, and consistency between training and serving data.
+- INNOVAPATH IT Solutions PVT Ltd [PAST ROLE]: Software Engineer. Key work: Built and deployed Spring Boot microservices using JPA/Hibernate, applying design patterns and Java 8 features for scalable backend development.
+
+
+REQUIRED EMAIL FORMAT:
+Output strictly in this format:
+
+SUBJECT: Application for [Job Title] at [Company Name]
+
+BODY:
+Dear Hiring Manager,
+
+[Para 1: Express interest. Mention 1 or 2 matching technologies. (Max 2 sentences)]
+
+[Para 2: State factual history. 
+If [CURRENT ROLE]: "In my current role at [COMPANY NAME]..." 
+If [PAST ROLE]: "During my time at [COMPANY NAME]..." 
+(Max 2 sentences)]
+
+[Para 3: Close professionally. (1 sentence ONLY)]
+
+I have attached my resume for your reference.
+
+Regards,
+Ramana Gangarao
+
+FINAL CONSTRAINTS:
+- No placeholders like [Job Title] in the final output.
+- Total body word count < 75.
+- Output the labels "SUBJECT:" and "BODY:"!
+
+NOW DRAFT THE EMAIL:

@@ -1,0 +1,20 @@
+2026-04-07 10:41:16,362 - src.core.resume_handler - INFO - Loaded resume: C:\Users\remot\Documents\SmartApply-dev\resume\Ravi\Ravi_Rayapalli_resume.json (Name: Ravi Kumar Rayapalli)
+2026-04-07 11:31:04,752 - src.core.reporter - INFO - Run report sent successfully to 1 recipient(s).
+2026-04-07 11:32:56,325 - src.core.resume_handler - INFO - Loaded resume: C:\Users\remot\Documents\SmartApply-dev\resume\Bavish\bavish_kangari_resume.json (Name: Bavish Kangari)
+2026-04-07 11:49:10,384 - src.core.reporter - INFO - Run report sent successfully to 4 recipient(s).
+2026-04-07 11:56:55,914 - src.core.resume_handler - INFO - Loaded resume: C:\Users\remot\Documents\SmartApply-dev\resume\Ramana\Ramana_Gangarao_Resume.json (Name: Ramana Gangarao)
+2026-04-07 12:01:57,618 - src.core.reporter - INFO - Run report sent successfully to 4 recipient(s).
+2026-04-07 12:02:06,447 - src.core.resume_handler - INFO - Loaded resume: C:\Users\remot\Documents\SmartApply-dev\resume\Bavish\bavish_kangari_resume.json (Name: Bavish Kangari)
+2026-04-07 12:14:26,814 - src.core.reporter - INFO - Run report sent successfully to 4 recipient(s).
+2026-04-07 12:16:56,140 - src.core.resume_handler - INFO - Loaded resume: C:\Users\remot\Documents\SmartApply-dev\resume\Bavish\bavish_kangari_resume.json (Name: Bavish Kangari)
+2026-04-07 12:16:57,878 - src.core.reporter - INFO - Run report sent successfully to 4 recipient(s).
+2026-04-07 12:17:00,353 - src.core.resume_handler - INFO - Loaded resume: C:\Users\remot\Documents\SmartApply-dev\resume\Ramana\Ramana_Gangarao_Resume.json (Name: Ramana Gangarao)
+2026-04-07 12:17:02,080 - src.core.reporter - INFO - Run report sent successfully to 4 recipient(s).
+2026-04-07 12:17:04,634 - src.core.resume_handler - INFO - Loaded resume: C:\Users\remot\Documents\SmartApply-dev\resume\Ravi\Ravi_Rayapalli_resume.json (Name: Ravi Kumar Rayapalli)
+2026-04-07 12:17:06,688 - src.core.reporter - INFO - Run report sent successfully to 4 recipient(s).
+2026-04-07 12:20:44,123 - src.core.resume_handler - INFO - Loaded resume: C:\Users\remot\Documents\SmartApply-dev\resume\Bavish\bavish_kangari_resume.json (Name: Bavish Kangari)
+2026-04-07 12:22:24,379 - src.core.reporter - INFO - Run report sent successfully to 1 recipient(s).
+2026-04-07 12:22:26,897 - src.core.resume_handler - INFO - Loaded resume: C:\Users\remot\Documents\SmartApply-dev\resume\Ramana\Ramana_Gangarao_Resume.json (Name: Ramana Gangarao)
+2026-04-07 12:24:16,550 - src.core.reporter - INFO - Run report sent successfully to 1 recipient(s).
+2026-04-07 12:24:19,240 - src.core.resume_handler - INFO - Loaded resume: C:\Users\remot\Documents\SmartApply-dev\resume\Ravi\Ravi_Rayapalli_resume.json (Name: Ravi Kumar Rayapalli)
+2026-04-07 12:25:23,669 - src.core.reporter - INFO - Run report sent successfully to 1 recipient(s).

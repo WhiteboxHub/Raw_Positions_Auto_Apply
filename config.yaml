@@ -36,8 +36,8 @@ input:
 
 # Email Processing
 email_processing:
-  email_limit: 55 # max emails per run
-  daily_cap: 100 # max emails per day per user (prevents Gmail 500/day limit)
+  email_limit: 1 # max emails per run
+  daily_cap: 250 # max emails per day per user (prevents Gmail 500/day limit)
   dry_run: false
   test_mode: false
   skip_llm: false
@@ -61,3 +61,10 @@ file_paths:
 logging:
   level: INFO # DEBUG, INFO, WARNING, ERROR
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Data Fetcher
+# Data Fetcher
+data_fetcher:
+  api_url: "https://api.whitebox-learning.com/api/email-positions/paginated"
+  page_size: 5000
+  output_filename: "daily_jobs.csv" # This will be set as input.csv_filename automatically

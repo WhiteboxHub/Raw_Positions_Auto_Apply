@@ -22,6 +22,9 @@ except Exception:
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.orchestrator import SmartApplyOrchestrator
+from src.services import DataFetcherService
+from src.config_loader import load_config
+from src.core.reporter import SmartApplyReporter
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -49,8 +52,37 @@ Usage:
     )
 
     parser.add_argument(
+        "--fetch",
+        action="store_true",
+        help="Fetch daily user data before running the pipeline"
+    )
+
+    parser.add_argument(
         "--user",
         help="Run for a specific user (looks in resume/<USER>/ for credentials and resume files)"
+    )
+
+    parser.add_argument(
+        "--users",
+        help="Comma-separated list of users to run in a distributed load (e.g. Bavish,Ravi,John)"
+    )
+
+    parser.add_argument(
+        "--run-all",
+        action="store_true",
+        help="Automatically detect all users in the resume/ directory and run distributed load across them"
+    )
+
+    parser.add_argument(
+        "--workflow-key",
+        default="smart_apply",
+        help="Workflow key for reporting API (default: 'smart_apply')"
+    )
+
+    parser.add_argument(
+        "--schedule-id",
+        type=int,
+        help="Schedule ID provided by the orchestrator API for tracking runs"
     )
 
     return parser.parse_args()
@@ -69,9 +101,77 @@ def main():
         load_dotenv()
 
     try:
-        orchestrator = SmartApplyOrchestrator(config_file=args.config)
-        exit_code = orchestrator.run(args)
-        sys.exit(exit_code)
+        config_dict = None
+        if args.fetch:
+            print("Running initial fetch based on config/env...")
+            config_dict = load_config(args.config).to_dict()
+            fetcher = DataFetcherService(config_dict)
+            if not fetcher.fetch_daily_data():
+                print("Data fetch failed. Proceeding with existing input file if present.")
+        
+        # Determine users to run
+        users = []
+        if args.run_all:
+            resume_dir = Path("resume")
+            if resume_dir.exists():
+                users = [d.name for d in resume_dir.iterdir() if d.is_dir() and d.name.strip()]
+        elif args.users:
+            users = [u.strip() for u in args.users.split(",") if u.strip()]
+        elif args.user:
+            users = [args.user]
+        else:
+            users = [None] # global config run
+            
+        total_users = len(users)
+        consolidated_data = []
+        
+        for idx, user in enumerate(users):
+            if total_users > 1:
+                print(f"\n========================================================")
+                print(f"Starting distributed run for user: {user} ({idx + 1}/{total_users})")
+                print(f"========================================================")
+                
+            # Override args.user for this specific iteration
+            args.user = user
+                
+            orchestrator = SmartApplyOrchestrator(config_file=args.config)
+            
+            # Carry over the updated csv_filename from the fetcher
+            if args.fetch and config_dict:
+                 fetched_csv = config_dict.get("input", {}).get("csv_filename")
+                 if fetched_csv:
+                     orchestrator.config.setdefault("input", {})["csv_filename"] = fetched_csv
+
+            # Pass the partition state down
+            orchestrator.config["partition"] = {
+                "index": idx,
+                "total": total_users
+            }
+
+            exit_code = orchestrator.run(args)
+            
+            # Store data for consolidated report
+            consolidated_data.append({
+                "user_name": orchestrator._user_name,
+                "stats": orchestrator._stats,
+                "results": orchestrator._csv_results
+            })
+            
+            if exit_code != 0 and total_users == 1:
+                # If it's a single run and it errored, send report now
+                reporter = SmartApplyReporter(consolidated_data)
+                reporter.send_report()
+                sys.exit(exit_code)
+                
+        # Dispatch consolidated report
+        if consolidated_data:
+            reporter = SmartApplyReporter(consolidated_data)
+            reporter.send_report()
+            
+        if total_users > 1:
+            print("\nAll distributed runs completed successfully.")
+            sys.exit(0)
+            
     except KeyboardInterrupt:
         print("\nInterrupted by user")
         sys.exit(1)

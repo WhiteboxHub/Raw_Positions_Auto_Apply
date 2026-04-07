@@ -165,6 +165,7 @@ INSTRUCTIONS:
 3. CONTEXT: Focus on the matching technologies between the candidate and the job posting.
 4. TARGET: Direct the application to {company_from_email if company_from_email else 'the company'}.
 5. GREETING: Use the greeting exactly as provided below.
+6. EXPERIENCE: If mentioning total years of experience, you MUST state exactly "{self.resume_data.total_experience}" as provided in the resume. Never mirror the job posting's required years.
 
 JOB POSTING:
 {job_description}
@@ -228,6 +229,7 @@ STRATEGY: Focus on the candidate's core profile and top skills. Keep it brief. I
 Recruiter greeting: {greeting}
 Company: {company}
 Candidate name: {self.user_name}
+Candidate total experience: {self.resume_data.total_experience} (Use this exact value if mentioning years of experience)
 Candidate top skills: {skills_str}
 
 Job posting context:
@@ -264,6 +266,7 @@ WRITE THE EMAIL NOW:"""
         prompt = f"""Task: Generate a 3-sentence job application email.
 
 Draft from: {name}
+Total Experience: {self.resume_data.total_experience}
 To: {company}
 
 Job snippet: {job_description[:200]}

@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.config_loader import load_config
 from src.services import CSVService, OllamaService, EmailGeneratorService, EmailValidatorService, GmailAPISender
 from src.models import AppConfig
-from src.core import ResumeHandler
+from src.core import ResumeHandler, WorkflowManager, SmartApplyReporter
 from src.validators import PreflightValidator
 
 
@@ -66,16 +66,38 @@ class SmartApplyOrchestrator:
     def run(self, args) -> int:
         """
         Main entry point for the application.
-        
-        Args:
-            args: Parsed command-line arguments
-            
-        Returns:
-            Exit code (0 = success, 1 = failure)
         """
-        # Override config with CLI args
         self._apply_cli_overrides(args)
 
+        workflow_manager = WorkflowManager()
+        workflow_key = getattr(args, 'workflow_key', 'smart_apply')
+        schedule_id = getattr(args, 'schedule_id', None)
+        
+        config_data = workflow_manager.get_workflow_config(workflow_key)
+        workflow_id = config_data.get("id", 0) if config_data else 0
+        run_id = workflow_manager.start_run(workflow_id=workflow_id, schedule_id=schedule_id)
+        
+        self._stats = {"sent": 0, "failed": 0, "skipped": 0, "errors": []}
+        self._csv_results = []
+        self._user_name = "Unknown User"
+
+        try:
+            return self._execute_pipeline(args)
+        finally:
+            # --- Whitebox Workflows API & Email Reporter: End Run ---
+            final_status = "success" if self._stats["failed"] == 0 else "failed"
+            workflow_manager.update_run_status(
+                run_id=run_id,
+                status=final_status,
+                records_processed=self._stats["sent"] + self._stats["skipped"] + self._stats["failed"],
+                records_failed=self._stats["failed"]
+            )
+            if schedule_id:
+                workflow_manager.update_schedule_status(schedule_id=schedule_id)
+                
+            # ------------------------------------------------------------
+
+    def _execute_pipeline(self, args) -> int:
         # Get CSV filename from config first to pass to validation
         csv_filename = self.config.get("input", {}).get("csv_filename")
         if not csv_filename:
@@ -100,13 +122,13 @@ class SmartApplyOrchestrator:
 
         try:
             resume = ResumeHandler.load_resume(resume_json_path)
-            user_name = resume.data.name
+            self._user_name = resume.data.name
         except Exception as e:
             self.logger.error(f"Failed to load resume: {e}")
             return 1
 
         # Ensure sanitized_user is available for log and output filenames
-        sanitized_user = "".join(c for c in user_name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_').lower()
+        sanitized_user = "".join(c for c in self._user_name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_').lower()
         if not sanitized_user:
             sanitized_user = "user"
 
@@ -119,12 +141,12 @@ class SmartApplyOrchestrator:
         # Get column mapping from config (merged with any overrides)
         column_mapping = self.config.get("input", {}).get("column_mapping", {})
 
-        # Load CSV
         csv_service = CSVService(
             input_dir=self.config.get("file_paths", {}).get("input_dir", "input"),
             sent_emails_db=str(db_path),
             column_mapping=column_mapping,
-            dry_run=self.dry_run
+            dry_run=self.dry_run,
+            partition_config=self.config.get("partition")
         )
 
         try:
@@ -138,6 +160,7 @@ class SmartApplyOrchestrator:
 
         # Log skipped rows
         if skipped_rows:
+            self._stats["skipped"] = len(skipped_rows)
             self.logger.warning(f"Skipped {len(skipped_rows)} invalid rows:")
             for skip_info in skipped_rows[:5]:  # Show first 5
                 self.logger.warning(f"  Row {skip_info['row']}: {skip_info['reason']} ({skip_info['email']})")
@@ -162,7 +185,7 @@ class SmartApplyOrchestrator:
         # Initialize services
         email_generator = EmailGeneratorService(
             resume_data=resume.data,
-            user_name=user_name,
+            user_name=self._user_name,
             ollama_service=ollama_service
         )
         email_validator = EmailValidatorService()
@@ -202,15 +225,9 @@ class SmartApplyOrchestrator:
                 return 1
 
         # Process each row
-        stats: Dict[str, Any] = {
-            "sent": 0,
-            "failed": 0,
-            "skipped": len(skipped_rows),
-            "errors": []
-        }
-
-        output_csv_path = self._get_output_csv_path(csv_filename, user_name)
-        csv_results: List[Dict[str, Any]] = []
+        # self._stats and self._csv_results are used
+        
+        output_csv_path = self._get_output_csv_path(csv_filename, self._user_name)
 
         # --- Daily Cap Check ---
         daily_cap = self.config.get("email_processing", {}).get("daily_cap", 100)
@@ -287,8 +304,8 @@ class SmartApplyOrchestrator:
                         self.logger.error(f"✗ Email validation failed for {email}:")
                         for error in validation_result.errors:
                             self.logger.error(f"  - {error}")
-                        stats["failed"] += 1
-                        csv_results.append({
+                        self._stats["failed"] += 1
+                        self._csv_results.append({
                             **row["raw_data"],
                             "sent_status": "validation_failed",
                             "sent_at": "",
@@ -330,7 +347,7 @@ class SmartApplyOrchestrator:
                         print("="*80 + "\n")
 
                         self.logger.info(f"[DRY-RUN] Would send to {email}: {email_obj.subject}")
-                        csv_results.append({
+                        self._csv_results.append({
                             **row["raw_data"],
                             "sent_status": "DRY-RUN",
                             "sent_at": "",
@@ -378,7 +395,7 @@ class SmartApplyOrchestrator:
 
                             if user_input not in ['Y', 'YES']:
                                 self.logger.info(f"User skipped sending to {email}")
-                                csv_results.append({
+                                self._csv_results.append({
                                     **row["raw_data"],
                                     "sent_status": "user_skipped",
                                     "sent_at": "",
@@ -399,9 +416,9 @@ class SmartApplyOrchestrator:
                             if success:
                                 self.logger.info(f"✓ Email sent to {email} (ID: {message_id})")
                                 csv_service.add_sent_email(email, message_id, description)
-                                stats["sent"] += 1
+                                self._stats["sent"] += 1
 
-                                csv_results.append({
+                                self._csv_results.append({
                                     **row["raw_data"],
                                     "sent_status": "success",
                                     "sent_at": datetime.now().isoformat(),
@@ -410,10 +427,10 @@ class SmartApplyOrchestrator:
                                 })
                             else:
                                 self.logger.error(f"✗ Failed to send to {email}: {message_id}")
-                                stats["failed"] += 1
-                                stats["errors"].append({"email": email, "reason": message_id})
+                                self._stats["failed"] += 1
+                                self._stats["errors"].append({"email": email, "reason": message_id})
 
-                                csv_results.append({
+                                self._csv_results.append({
                                     **row["raw_data"],
                                     "sent_status": "failed",
                                     "sent_at": "",
@@ -423,9 +440,9 @@ class SmartApplyOrchestrator:
                         else:
                             error_msg = "Email sender not initialized"
                             self.logger.error(f"✗ Cannot send to {email}: {error_msg}")
-                            stats["failed"] += 1
+                            self._stats["failed"] += 1
 
-                            csv_results.append({
+                            self._csv_results.append({
                                 **row["raw_data"],
                                 "sent_status": "failed",
                                 "sent_at": "",
@@ -435,7 +452,7 @@ class SmartApplyOrchestrator:
                     else:
                         # No email sender available
                         self.logger.info(f"[SKIPPED] {email} (no email sender in dry_run or test mode)")
-                        csv_results.append({
+                        self._csv_results.append({
                             **row["raw_data"],
                             "sent_status": "skipped",
                             "sent_at": "",
@@ -445,10 +462,10 @@ class SmartApplyOrchestrator:
 
                 except Exception as e:
                     self.logger.error(f"✗ Unexpected error processing row {row_idx + 1}: {e}")
-                    stats["failed"] += 1
-                    stats["errors"].append({"row": row_idx + 1, "reason": str(e)})
+                    self._stats["failed"] += 1
+                    self._stats["errors"].append({"row": row_idx + 1, "reason": str(e)})
 
-                    csv_results.append({
+                    self._csv_results.append({
                         **row.get("raw_data", {}),
                         "sent_status": "failed",
                         "sent_at": "",
@@ -459,16 +476,16 @@ class SmartApplyOrchestrator:
 
 
         # Write results to output CSV and HTML
-        self._write_output_csv(output_csv_path, csv_results, valid_rows[0]["raw_data"].keys())
-        sanitized_user = "".join(c for c in user_name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_').lower()
+        self._write_output_csv(output_csv_path, self._csv_results, valid_rows[0]["raw_data"].keys())
+        sanitized_user = "".join(c for c in self._user_name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_').lower()
         if not sanitized_user:
             sanitized_user = "user"
-        self._write_output_html(output_csv_path.parent, f"{sanitized_user}_emails_applied", datetime.now().strftime("%Y%m%d_%H%M%S"), csv_results, stats)
+        self._write_output_html(output_csv_path.parent, f"{sanitized_user}_emails_applied", datetime.now().strftime("%Y%m%d_%H%M%S"), self._csv_results, self._stats)
 
         # Print summary
-        self._print_summary(stats, len(valid_rows))
+        self._print_summary(self._stats, len(valid_rows))
 
-        return 0 if stats["failed"] == 0 else 1
+        return 0 if self._stats["failed"] == 0 else 1
 
     def _count_sent_today(self) -> int:
         """Count how many emails have been sent today from sent_emails.json."""

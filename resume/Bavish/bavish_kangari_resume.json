@@ -2,7 +2,7 @@
   "cv": {
     "name": "Bavish Kangari",
     "location": "San Francisco",
-    "email": "bavishkangari13@gmail.com",
+    "email": "kangaribavish2@gmail.com",
     "phone": "+1-510-265-9100",
     "social_networks": [
       {
@@ -150,6 +150,7 @@
         }
       ],
       "certifications": []
-    }
+    },
+    "total_experience": "5+ years"
   }
 }

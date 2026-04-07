@@ -6,6 +6,7 @@ from src.services.email_validator_service import EmailValidatorService
 from src.services.email_generator_service import EmailGeneratorService
 from src.services.gmail_service import GmailAPISender
 from src.services.csv_service import CSVService
+from src.services.data_fetcher import DataFetcherService
 
 __all__ = [
     "OllamaService",
@@ -14,4 +15,5 @@ __all__ = [
     "EmailGeneratorService",
     "GmailAPISender",
     "CSVService",
+    "DataFetcherService",
 ]

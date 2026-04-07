@@ -20,7 +20,7 @@ Automated email generation and sending for job applications using local Ollama L
 
 ```bash
 python3 -m venv venv
-source venv/bin/activate
+venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -205,3 +205,10 @@ ollama pull llama3    # Download model
 ## License
 
 Personal Use
+
+
+##sample_jobs.csv
+##config.yaml
+##script_activate - venv\Scripts\activate
+##python run.py --user xyz
+##check_count key_word=" INFO - CSV read complete"

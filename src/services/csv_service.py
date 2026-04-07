@@ -26,7 +26,7 @@ class CSVService:
         "position", "job", "role", "opportunity"
     ]
 
-    def __init__(self, input_dir: str, sent_emails_db: str, column_mapping: Optional[Dict[str, str]] = None, dry_run: bool = False):
+    def __init__(self, input_dir: str, sent_emails_db: str, column_mapping: Optional[Dict[str, str]] = None, dry_run: bool = False, partition_config: Optional[Dict[str, int]] = None):
         """
         Initialize CSVService.
         
@@ -36,11 +36,13 @@ class CSVService:
             column_mapping: Optional mapping of logical names to CSV column names
                            e.g., {"email": "Email Address", "description": "Job Description"}
             dry_run: If True, skip duplicate checking
+            partition_config: Optional dict with 'index' and 'total' for distributing load
         """
         self.input_dir = Path(input_dir)
         self.sent_emails_db = Path(sent_emails_db)
         self.column_mapping = column_mapping or {}
         self.dry_run = dry_run
+        self.partition_config = partition_config
         self.sent_emails = self._load_sent_emails()
 
     def read_csv(self, filename: str, limit: Optional[int] = None) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
@@ -81,8 +83,7 @@ class CSVService:
                     raise ValueError("Description column is required. Cannot detect in CSV.")
 
                 for row_idx, row in enumerate(reader, start=2):  # start=2 because row 1 is header
-                    if limit and row_count >= limit:
-                        break
+                    # Removed premature limit check so we can partition all valid rows first
 
                     email = row.get(email_col, "").strip()
                     title = row.get(title_col, "").strip() if title_col else ""
@@ -121,9 +122,21 @@ class CSVService:
                         "row_index": row_idx,
                         "raw_data": row
                     })
-                    row_count += 1
-
-            logger.info(f"CSV read complete: {len(valid_rows)} valid rows, {len(skipped_rows)} skipped")
+                    
+            # Apply Partitioning logic if configured
+            if self.partition_config and self.partition_config.get("total", 1) > 1:
+                total = self.partition_config["total"]
+                index = self.partition_config["index"]
+                
+                my_partition = [row for i, row in enumerate(valid_rows) if i % total == index]
+                logger.info(f"Partition check: Total valid {len(valid_rows)}, this profile took {len(my_partition)} (idx {index} of {total})")
+                valid_rows = my_partition
+                
+            # Now apply limit to the resulting subset
+            if limit and len(valid_rows) > limit:
+                valid_rows = valid_rows[:limit]
+                
+            logger.info(f"CSV read complete: {len(valid_rows)} partitioned target rows (total skipped {len(skipped_rows)})")
             return valid_rows, skipped_rows
 
         except Exception as e:
