@@ -36,7 +36,7 @@ input:
 
 # Email Processing
 email_processing:
-  email_limit: 1 # max emails per run
+  email_limit: 150 # max emails per run
   daily_cap: 250 # max emails per day per user (prevents Gmail 500/day limit)
   dry_run: false
   test_mode: false
