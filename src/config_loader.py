@@ -1,5 +1,5 @@
 """
-Configuration loader for SmartApply.
+Configuration loader for Raw_Positions_Auto_Apply.
 Handles parsing YAML/JSON config files and merging with CLI arguments and environment variables.
 """
 

@@ -1,4 +1,4 @@
-# SmartApply - AI-Powered Job Application Email Generator
+# Raw_Positions_Auto_Apply - AI-Powered Job Application Email Generator
 
 Automated email generation and sending for job applications using local Ollama LLM and Gmail API.
 
@@ -115,7 +115,7 @@ Use `resume/resume_template.json` as your starting point. Key structure:
 ## Project Structure
 
 ```
-SmartApply/
+Raw_Positions_Auto_Apply/
 ├── src/
 │   ├── main.py               # CLI entry point
 │   ├── orchestrator.py       # Pipeline & API logging orchestration

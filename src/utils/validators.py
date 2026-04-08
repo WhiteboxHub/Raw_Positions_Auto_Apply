@@ -1,4 +1,4 @@
-"""General validators for SmartApply."""
+"""General validators for Raw_Positions_Auto_Apply."""
 
 import re
 from typing import Optional

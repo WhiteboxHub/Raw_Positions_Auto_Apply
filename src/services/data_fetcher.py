@@ -117,7 +117,7 @@ class DataFetcherService:
             writer.writeheader()
             
             for job in jobs:
-                # The API returns lowercase items, we need to map them back to the headers SmartApply expects.
+                # The API returns lowercase items, we need to map them back to the headers Raw_Positions_Auto_Apply expects.
                 mapped_job = {
                     "ID": job.get("id", ""),
                     "Title": job.get("job_title") or job.get("title") or "",

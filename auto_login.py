@@ -56,7 +56,7 @@ def perform_login():
             if token:
                 print("✅ Login successful! Token retrieved.")
                 
-                # Update both tokens used by SmartApply pipeline
+                # Update both tokens used by Raw_Positions_Auto_Apply pipeline
                 updates = {
                     "WHITEBOX_BEARER_TOKEN": token,
                     "WBL_API_TOKEN": token

@@ -1,5 +1,5 @@
 """
-CSV reading and processing service for SmartApply.
+CSV reading and processing service for Raw_Positions_Auto_Apply.
 Handles reading CSV files, validating data, deduplicating entries, and tracking sent emails.
 """
 

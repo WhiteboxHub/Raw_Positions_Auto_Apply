@@ -7,8 +7,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class SmartApplyReporter:
-    """Handles email reporting for SmartApply-dev runs."""
+class RawPositionsAutoApplyReporter:
+    """Handles email reporting for Raw_Positions_Auto_Apply runs."""
     def __init__(self, consolidated_data):
         self.consolidated_data = consolidated_data
         
@@ -60,7 +60,7 @@ class SmartApplyReporter:
             
         msg = MIMEMultipart()
         # Set explicitly the display name so that emails don't visually group under a single account sender name in Gmail UI
-        msg['From'] = f"SmartApply System <{self.email_from}>"
+        msg['From'] = f"Raw_Positions_Auto_Apply System <{self.email_from}>"
         msg['To'] = ', '.join(self.email_to)
         msg['Subject'] = subject
         msg.attach(MIMEText(html_body, 'html'))
@@ -81,7 +81,7 @@ class SmartApplyReporter:
             html_body = f"""
             <html>
             <body style="font-family: Arial, sans-serif; background-color: #f9fafb; color: #111827; padding: 20px;">
-                <h2 style="color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">SmartApply Consolidated Report</h2>
+                <h2 style="color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">Raw_Positions_Auto_Apply Consolidated Report</h2>
                 <p><strong>Date:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
             """
             
@@ -180,13 +180,13 @@ class SmartApplyReporter:
 
             html_body += """
                 <p style="margin-top: 40px; font-size: 0.85em; color: #9ca3af; text-align: center;">
-                    <em>This is an automated consolidated report from SmartApply.</em>
+                    <em>This is an automated consolidated report from Raw_Positions_Auto_Apply.</em>
                 </p>
             </body>
             </html>
             """
             
-            subject = f"SmartApply Consolidated Report - {datetime.now().strftime('%Y-%m-%d')}"
+            subject = f"Raw_Positions_Auto_Apply Consolidated Report - {datetime.now().strftime('%Y-%m-%d')}"
             return subject, html_body
         except Exception as e:
             logger.error(f"Error generating HTML report: {e}")

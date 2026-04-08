@@ -1,5 +1,5 @@
 """
-Validators module for SmartApply.
+Validators module for Raw_Positions_Auto_Apply.
 Pre-flight checks to ensure all resources are available before processing.
 """
 

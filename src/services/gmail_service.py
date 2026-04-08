@@ -1,5 +1,5 @@
 """
-Email sending service for SmartApply.
+Email sending service for Raw_Positions_Auto_Apply.
 Handles sending emails via Gmail API (OAuth2) with resume attachment and rate limiting.
 """
 

@@ -7,6 +7,7 @@ from src.services.email_generator_service import EmailGeneratorService
 from src.services.gmail_service import GmailAPISender
 from src.services.csv_service import CSVService
 from src.services.data_fetcher import DataFetcherService
+from src.services.whitebox_api_service import WhiteboxAPIService
 
 __all__ = [
     "OllamaService",
@@ -16,4 +17,5 @@ __all__ = [
     "GmailAPISender",
     "CSVService",
     "DataFetcherService",
+    "WhiteboxAPIService",
 ]

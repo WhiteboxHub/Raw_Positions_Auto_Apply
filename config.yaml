@@ -1,4 +1,4 @@
-# SmartApply Configuration File (YAML)
+# Raw_Positions_Auto_Apply Configuration File (YAML)
 # This file contains all configurable options for the email automation tool.
 # Command-line arguments override these settings.
 
@@ -63,8 +63,13 @@ logging:
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 # Data Fetcher
-# Data Fetcher
 data_fetcher:
   api_url: "https://api.whitebox-learning.com/api/email-positions/paginated"
   page_size: 5000
   output_filename: "daily_jobs.csv" # This will be set as input.csv_filename automatically
+
+# Web Execution Configuration
+web_extraction:
+  api_url: "https://api.whitebox-learning.com/api/candidate/marketing"
+  enabled_field: "run_daily_workflow" # Default to an existing field for testing
+  temp_dir: "tmp/web_profiles"

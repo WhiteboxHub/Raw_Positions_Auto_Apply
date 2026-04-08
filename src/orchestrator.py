@@ -1,5 +1,5 @@
 """
-SmartApply Orchestrator - Main orchestration logic for email automation pipeline.
+Raw_Positions_Auto_Apply Orchestrator - Main orchestration logic for email automation pipeline.
 Coordinates between CSV reading, LLM generation, email validation, and Gmail sending.
 """
 
@@ -18,16 +18,16 @@ from typing import Dict, List, Any, Optional
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.config_loader import load_config
-from src.services import CSVService, OllamaService, EmailGeneratorService, EmailValidatorService, GmailAPISender
+from src.services import CSVService, OllamaService, EmailGeneratorService, EmailValidatorService, GmailAPISender, WhiteboxAPIService
 from src.models import AppConfig
-from src.core import ResumeHandler, WorkflowManager, SmartApplyReporter
+from src.core import ResumeHandler, WorkflowManager, RawPositionsAutoApplyReporter
 from src.validators import PreflightValidator
 
 
 logger = logging.getLogger(__name__)
 
 
-class SmartApplyOrchestrator:
+class RawPositionsAutoApplyOrchestrator:
     """Main orchestrator for the email automation pipeline."""
 
     def __init__(self, config_file: Optional[str] = None):
@@ -59,7 +59,7 @@ class SmartApplyOrchestrator:
 
         self.logger = logging.getLogger(__name__)
         self.logger.info("=" * 80)
-        self.logger.info("SmartApply - Email Automation Tool")
+        self.logger.info("Raw_Positions_Auto_Apply - Email Automation Tool")
         self.logger.info(f"Started at {datetime.now()}")
         self.logger.info("=" * 80)
 
@@ -70,7 +70,7 @@ class SmartApplyOrchestrator:
         self._apply_cli_overrides(args)
 
         workflow_manager = WorkflowManager()
-        workflow_key = getattr(args, 'workflow_key', 'smart_apply')
+        workflow_key = getattr(args, 'workflow_key', 'raw_positions_auto_apply')
         schedule_id = getattr(args, 'schedule_id', None)
         
         config_data = workflow_manager.get_workflow_config(workflow_key)
@@ -82,7 +82,10 @@ class SmartApplyOrchestrator:
         self._user_name = "Unknown User"
 
         try:
-            return self._execute_pipeline(args)
+            if getattr(args, 'web', False):
+                return self._run_web_workflow(args, workflow_manager, run_id)
+            else:
+                return self._execute_pipeline(args)
         finally:
             # --- Whitebox Workflows API & Email Reporter: End Run ---
             final_status = "success" if self._stats["failed"] == 0 else "failed"
@@ -96,6 +99,120 @@ class SmartApplyOrchestrator:
                 workflow_manager.update_schedule_status(schedule_id=schedule_id)
                 
             # ------------------------------------------------------------
+
+    def _run_web_workflow(self, args, workflow_manager, run_id) -> int:
+        """Fetch candidates from API and run for each one."""
+        api_service = WhiteboxAPIService(self.config)
+        try:
+            candidates = api_service.fetch_enabled_candidates()
+            if not candidates:
+                self.logger.info("No enabled candidates found on the web.")
+                return 0
+
+            self.logger.info(f"🚀 Starting web workflow for {len(candidates)} candidates")
+            
+            overall_status = 0
+            for idx, candidate in enumerate(candidates):
+                name = candidate.get("full_name", "Unknown")
+                candidate_id = candidate.get("id")
+                self.logger.info(f"\n{'='*80}\n👤 WEB PROFILE {idx+1}/{len(candidates)}: {name} (ID: {candidate_id})\n{'='*80}")
+                
+                # Setup candidate-specific environment
+                temp_profile_paths = self._setup_web_candidate(candidate, api_service)
+                if not temp_profile_paths:
+                    self.logger.error(f"Failed to setup profile for {name}. Skipping.")
+                    continue
+                
+                # Run pipeline for this candidate
+                try:
+                    status = self._execute_pipeline(args)
+                    if status != 0:
+                        overall_status = status
+                except Exception as e:
+                    self.logger.error(f"Error running pipeline for {name}: {e}")
+                    overall_status = 1
+                finally:
+                    # Individual cleanup (resume PDF)
+                    if temp_profile_paths.get("resume_pdf"):
+                        Path(temp_profile_paths["resume_pdf"]).unlink(missing_ok=True)
+            
+            return overall_status
+        finally:
+            api_service.cleanup()
+
+    def _setup_web_candidate(self, candidate: Dict[str, Any], api_service: WhiteboxAPIService) -> Optional[Dict[str, str]]:
+        """Setup temporary files and config for a web-based candidate."""
+        name = candidate.get("full_name", "Unknown")
+        candidate_json = candidate.get("candidate_json")
+        resume_link = candidate.get("resume_link")
+        
+        # Credentials
+        email = candidate.get("email")
+        password = candidate.get("password")
+        imap_password = candidate.get("imap_password")
+        linkedin_passwd = candidate.get("linkedin_passwd")
+        
+        if not candidate_json:
+            self.logger.warning(f"No candidate_json found for {name}")
+            return None
+
+        # 1. Create temporary resume JSON
+        tmp_dir = Path(self.config.get("web_extraction", {}).get("temp_dir", "tmp/web_profiles"))
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+        
+        sanitized_name = "".join(c for c in name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_').lower()
+        json_path = tmp_dir / f"{sanitized_name}_resume.json"
+        
+        try:
+            # Parse candidate_json if it's a string
+            if isinstance(candidate_json, str):
+                profile_data = json.loads(candidate_json)
+            else:
+                profile_data = candidate_json
+                
+            with open(json_path, "w") as f:
+                json.dump(profile_data, f)
+            
+            self.config.setdefault("resume", {})["json_path"] = str(json_path.resolve())
+        except Exception as e:
+            self.logger.error(f"Failed to save candidate JSON for {name}: {e}")
+            return None
+
+        # 2. Download resume PDF
+        pdf_path = api_service.download_resume(resume_link, name)
+        if pdf_path:
+            self.config.setdefault("resume", {})["pdf_path"] = str(pdf_path.resolve())
+        else:
+            self.logger.warning(f"No resume PDF downloaded for {name}")
+
+        # 3. Create temporary credentials.json
+        # NOTE: We inject these directly into the config instead of writing a file if possible,
+        # but GmailAPISender expects a path. So we'll write a temp one.
+        creds_path = tmp_dir / f"{sanitized_name}_credentials.json"
+        creds_data = {
+            "email": email,
+            "password": password,
+            "imap_password": imap_password,
+            "linkedin_passwd": linkedin_passwd
+        }
+        # Also need OAuth2 fields if using Gmail API, but if user provided imap_password, 
+        # it might be using SMTP or specific App Passwords.
+        # For now, we'll write them and set GMAIL_API_CREDENTIALS_PATH
+        try:
+            with open(creds_path, "w") as f:
+                json.dump(creds_data, f)
+            
+            self.config.setdefault("gmail", {})["credentials_path"] = str(creds_path.resolve())
+            os.environ["GMAIL_API_CREDENTIALS_PATH"] = str(creds_path.resolve())
+        except Exception as e:
+            self.logger.error(f"Failed to save credentials for {name}: {e}")
+            return None
+
+        return {
+            "resume_json": str(json_path),
+            "resume_pdf": str(pdf_path) if pdf_path else None,
+            "credentials": str(creds_path)
+        }
 
     def _execute_pipeline(self, args) -> int:
         # Get CSV filename from config first to pass to validation
@@ -649,7 +766,7 @@ class SmartApplyOrchestrator:
         html_content = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>SmartApply Execution Report</title>
+    <title>Raw_Positions_Auto_Apply Execution Report</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f9fafb; color: #111827; padding: 40px; margin: 0; }}
         .container {{ max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }}
@@ -664,7 +781,7 @@ class SmartApplyOrchestrator:
 </head>
 <body>
     <div class="container">
-        <h1>SmartApply Run Report</h1>
+        <h1>Raw_Positions_Auto_Apply Run Report</h1>
         <p style="color: #6b7280;">Execution Timestamp: {timestamp}</p>
         
         <div class="metrics">

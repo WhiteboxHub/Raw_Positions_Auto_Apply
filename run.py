@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-SmartApply Run Wrapper
-Convenience script to run SmartApply without explicitly typing src/main.py
+Raw_Positions_Auto_Apply Run Wrapper
+Convenience script to run Raw_Positions_Auto_Apply without explicitly typing src/main.py
 """
 
 import sys

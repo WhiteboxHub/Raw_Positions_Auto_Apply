@@ -1,5 +1,5 @@
 """
-SmartApply - Main Entry Point
+Raw_Positions_Auto_Apply - Main Entry Point
 Email automation tool for job applications using local LLM and Gmail.
 
 Usage:
@@ -21,16 +21,16 @@ except Exception:
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.orchestrator import SmartApplyOrchestrator
+from src.orchestrator import RawPositionsAutoApplyOrchestrator
 from src.services import DataFetcherService
 from src.config_loader import load_config
-from src.core.reporter import SmartApplyReporter
+from src.core.reporter import RawPositionsAutoApplyReporter
 
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description="SmartApply - Automated email generation and sending for job applications",
+        description="Raw_Positions_Auto_Apply - Automated email generation and sending for job applications",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Usage:
@@ -63,6 +63,12 @@ Usage:
     )
 
     parser.add_argument(
+        "--web",
+        action="store_true",
+        help="Run for profiles enabled on the Whitebox marketing page"
+    )
+
+    parser.add_argument(
         "--users",
         help="Comma-separated list of users to run in a distributed load (e.g. Bavish,Ravi,John)"
     )
@@ -75,8 +81,8 @@ Usage:
 
     parser.add_argument(
         "--workflow-key",
-        default="smart_apply",
-        help="Workflow key for reporting API (default: 'smart_apply')"
+        default="raw_positions_auto_apply",
+        help="Workflow key for reporting API (default: 'raw_positions_auto_apply')"
     )
 
     parser.add_argument(
@@ -134,7 +140,7 @@ def main():
             # Override args.user for this specific iteration
             args.user = user
                 
-            orchestrator = SmartApplyOrchestrator(config_file=args.config)
+            orchestrator = RawPositionsAutoApplyOrchestrator(config_file=args.config)
             
             # Carry over the updated csv_filename from the fetcher
             if args.fetch and config_dict:
@@ -159,13 +165,13 @@ def main():
             
             if exit_code != 0 and total_users == 1:
                 # If it's a single run and it errored, send report now
-                reporter = SmartApplyReporter(consolidated_data)
+                reporter = RawPositionsAutoApplyReporter(consolidated_data)
                 reporter.send_report()
                 sys.exit(exit_code)
                 
         # Dispatch consolidated report
         if consolidated_data:
-            reporter = SmartApplyReporter(consolidated_data)
+            reporter = RawPositionsAutoApplyReporter(consolidated_data)
             reporter.send_report()
             
         if total_users > 1:
