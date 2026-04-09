@@ -185,33 +185,29 @@ class RawPositionsAutoApplyOrchestrator:
         else:
             self.logger.warning(f"No resume PDF downloaded for {name}")
 
-        # 3. Create temporary credentials.json
-        # NOTE: We inject these directly into the config instead of writing a file if possible,
-        # but GmailAPISender expects a path. So we'll write a temp one.
-        creds_path = tmp_dir / f"{sanitized_name}_credentials.json"
-        creds_data = {
+        # 3. Handle Credentials and isolation
+        sanitized_name = "".join(c for c in name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_').lower()
+        token_path = tmp_dir / f"{sanitized_name}_token.pickle"
+        
+        # We store candidate specific login info in config for potential future use or logging
+        # But we do NOT overwrite the global GMAIL_API_CREDENTIALS_PATH here.
+        candidate_creds = {
             "email": email,
             "password": password,
             "imap_password": imap_password,
             "linkedin_passwd": linkedin_passwd
         }
-        # Also need OAuth2 fields if using Gmail API, but if user provided imap_password, 
-        # it might be using SMTP or specific App Passwords.
-        # For now, we'll write them and set GMAIL_API_CREDENTIALS_PATH
-        try:
-            with open(creds_path, "w") as f:
-                json.dump(creds_data, f)
-            
-            self.config.setdefault("gmail", {})["credentials_path"] = str(creds_path.resolve())
-            os.environ["GMAIL_API_CREDENTIALS_PATH"] = str(creds_path.resolve())
-        except Exception as e:
-            self.logger.error(f"Failed to save credentials for {name}: {e}")
-            return None
+        self.config.setdefault("web_extraction", {})["current_candidate_creds"] = candidate_creds
+        self.config.setdefault("gmail", {})["token_path"] = str(token_path.resolve())
+        
+        # Ensure the candidate's email is used as the primary email in config for this run
+        if email:
+            self.config.setdefault("gmail", {})["user_email"] = email
 
         return {
             "resume_json": str(json_path),
             "resume_pdf": str(pdf_path) if pdf_path else None,
-            "credentials": str(creds_path)
+            "token": str(token_path)
         }
 
     def _execute_pipeline(self, args) -> int:
@@ -325,9 +321,13 @@ class RawPositionsAutoApplyOrchestrator:
                 pdf_files = list(resume_dir.glob("*.pdf")) if resume_dir.exists() else []
                 resume_pdf = str(pdf_files[0]) if pdf_files else "resume/resume.pdf"
 
+            # Path to token file (for isolation between users/runs)
+            token_path = self.config.get("gmail", {}).get("token_path")
+
             email_sender = GmailAPISender(
                 credentials_path=creds_path,
                 resume_pdf_path=resume_pdf,
+                token_path=token_path,
                 email_delay_min_seconds=self.config.get("gmail", {}).get("email_delay_min_seconds", 30),
                 email_delay_max_seconds=self.config.get("gmail", {}).get("email_delay_max_seconds", 60),
                 cooldown_every_n_emails=self.config.get("gmail", {}).get("cooldown_every_n_emails", 10),
@@ -338,7 +338,7 @@ class RawPositionsAutoApplyOrchestrator:
             
             # Verify email_sender is initialized
             if email_sender.service is None and not test_mode:
-                self.logger.error("Gmail API service failed to initialize. Cannot send emails.")
+                self.logger.error(f"Gmail API service failed to initialize for {self._user_name}. Cannot send emails.")
                 return 1
 
         # Process each row

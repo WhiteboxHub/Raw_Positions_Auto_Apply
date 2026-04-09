@@ -25,6 +25,7 @@ class GmailAPISender:
         self,
         credentials_path: str,
         resume_pdf_path: str,
+        token_path: Optional[str] = None,
         email_delay_min_seconds: float = 30.0,
         email_delay_max_seconds: float = 60.0,
         cooldown_every_n_emails: int = 10,
@@ -38,6 +39,7 @@ class GmailAPISender:
         Args:
             credentials_path: Path to credentials.json from Google Cloud Console
             resume_pdf_path: Path to resume PDF to attach
+            token_path: Optional explicit path to token.pickle (for isolation)
             email_delay_min_seconds: Minimum randomized delay between emails
             email_delay_max_seconds: Maximum randomized delay between emails
             cooldown_every_n_emails: Trigger a long cooldown pause every N emails
@@ -47,6 +49,7 @@ class GmailAPISender:
         """
         self.credentials_path = credentials_path
         self.resume_pdf_path = Path(resume_pdf_path)
+        self.token_path = Path(token_path) if token_path else None
         self.email_delay_min_seconds = email_delay_min_seconds
         self.email_delay_max_seconds = email_delay_max_seconds
         self.cooldown_every_n_emails = cooldown_every_n_emails
@@ -70,10 +73,15 @@ class GmailAPISender:
             
             creds = None
             
-            # Store token in the same directory as credentials to ensure user-isolation
-            # e.g., resume/Ramana/token.pickle instead of project root
-            cred_path = Path(self.credentials_path).resolve()
-            token_path = cred_path.parent / "token.pickle"
+            # Use explicit token_path if provided, otherwise derive from credentials_path
+            if self.token_path:
+                token_path = self.token_path
+            else:
+                cred_path = Path(self.credentials_path).resolve()
+                token_path = cred_path.parent / "token.pickle"
+            
+            # Ensure parent directory exists for token
+            token_path.parent.mkdir(parents=True, exist_ok=True)
             
             # Check for saved token
             if token_path.exists():

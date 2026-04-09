@@ -71,5 +71,6 @@ data_fetcher:
 # Web Execution Configuration
 web_extraction:
   api_url: "https://api.whitebox-learning.com/api/candidate/marketing"
-  enabled_field: "run_daily_workflow" # Default to an existing field for testing
+  enabled_field: "run_raw_positions_workflow" # Use the new Raw Positions Workflow field
+  # enabled_field: "YOUR_NEW_FIELD_NAME"
   temp_dir: "tmp/web_profiles"
