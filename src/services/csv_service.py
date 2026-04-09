@@ -26,6 +26,11 @@ class CSVService:
         "position", "job", "role", "opportunity"
     ]
 
+    DISALLOWED_EMPLOYMENT_KEYWORDS = [
+        "free lancing", "freelance", "freelancing",
+        "part time", "part-time"
+    ]
+
     def __init__(self, input_dir: str, sent_emails_db: str, column_mapping: Optional[Dict[str, str]] = None, dry_run: bool = False, partition_config: Optional[Dict[str, int]] = None):
         """
         Initialize CSVService.
@@ -246,6 +251,12 @@ class CSVService:
 
         if not self._is_valid_email(email):
             return f"invalid_email_format"
+            
+        # Check for disallowed employment types (freelance, part-time)
+        for keyword in self.DISALLOWED_EMPLOYMENT_KEYWORDS:
+            if re.search(r'\b' + re.escape(keyword) + r'\b', combined_text, re.IGNORECASE):
+                logger.info(f"Skipping row {row_idx}: Disallowed employment type keyword '{keyword}' found")
+                return "disallowed_employment_type"
 
         return None
 

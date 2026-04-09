@@ -163,7 +163,7 @@ Regards,
         if word_count < 25:  # Lowered slightly for minimal/generalized attempts
             return False, f"too_short ({word_count} words)"
 
-        placeholders = ["[name]", "[company]", "[your name]", "[position]", "[role]", "[hiring manager]", "[job title]"]
+        placeholders = ["[name]", "[company]", "[your name]", "[position]", "[role]", "[hiring manager]", "[job title]", "[industry/field]"]
         body_lower = body.lower()
         for p in placeholders:
             if p in body_lower:
