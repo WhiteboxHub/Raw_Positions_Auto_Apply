@@ -76,7 +76,7 @@ class EmailValidatorService:
                     # Allow if it has "at CompanyName" (e.g., "Application for Data Scientist at Cruisedyno")
                     if ' at ' in subject.lower():
                         break  # Has company name, so it's not too generic
-                    errors.append(f"Subject too generic: '{subject}' - should mention specific role/company")
+                    warnings.append(f"Subject too generic: '{subject}' - should mention specific role/company")
                     break
             
             # Check for vague phrases
