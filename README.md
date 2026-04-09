@@ -66,20 +66,47 @@ ollama:
   llm_quality_retries: 3
 ```
 
-### 5. Run
+## Execution Modes
+
+The tool supports several ways to run the automation pipeline, depending on whether you are running for yourself or orchestrating multiple profiles.
+
+### 1. Individual Local Run
+Use this to run the pipeline for a specific candidate whose resume and tokens are stored in `resume/<USER_NAME>/`.
+```bash
+# Fetch fresh jobs and run for a specific user
+python run.py --user Bavish --fetch
+
+# Preview only (no emails sent)
+python run.py --user Bavish --fetch --dry-run
+```
+
+### 2. Distributed Multi-User Run (Load Balancing)
+Split the daily workload evenly across multiple profiles to avoid rate limiting and maximize reach. The tool divides the valid job list by the number of users.
 
 ```bash
-# Fetch fresh jobs from API and send emails for the default setup
-python run.py
+# Automatically detect all folders in resume/ and split jobs among them
+python run.py --run-all --fetch
 
-# Run for a specific user profile (ideal for scheduled tasks)
-python run.py --user Your_Name
+# Run for a specific subset of profiles
+python run.py --users Bavish,Ravi,Ramana --fetch
+```
 
-# Preview emails without sending (dry-run mode)
-python run.py --user Your_Name --dry-run
+### 3. Web-Based Orchestration (Whitebox Integration)
+This mode connects to the Whitebox Learning API to identify which candidates have the **"Run Raw Positions Workflow"** flag enabled on the marketing page.
 
-# Run web-based automation (fetches enabled candidates from Whitebox API)
-python run.py --web --dry-run
+```bash
+# Fetch enabled candidates from the marketing portal and run sequentially
+python run.py --web
+```
+*This mode automatically downloads resumes, fetches candidate-specific tokens, and cleans up temporary files after execution.*
+
+### 4. Utility Commands
+```bash
+# Fetch fresh jobs from API without running the full pipeline
+python run.py --fetch
+
+# Run with custom config file
+python run.py --config my_custom_config.yaml
 ```
 
 ## Web-Based Automation Workflow
@@ -157,6 +184,7 @@ Raw_Positions_Auto_Apply/
 ├── data/                      # Sent emails database (deduplication)
 ├── tests/                     # Unit test suite
 ├── config.yaml                # Configuration registry
+├── run.py                     # Convenience bootstrapper
 └── run.py                     # Convenience bootstrapper
 ```
 
