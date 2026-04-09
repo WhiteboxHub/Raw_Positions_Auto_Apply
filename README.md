@@ -12,6 +12,7 @@ Automated email generation and sending for job applications using local Ollama L
 - 🎯 **Batch & API Processing** — Process multiple job postings from CSV or dynamically fetch them each day via the Whitebox Learning API.
 - 👥 **Multi-Profile Support** — Run the system seamlessly for multiple users (e.g., `python run.py --user John`).
 - 📊 **Tracking & Orchestrator API** — Prevents duplicate emails across all runs by tracking recipient emails. Logs workflow metrics, skips, and failures directly to the central Orchestrator dashboard.
+- 🌐 **Web-Based Orchestration** — Automatically pulls candidate profiles and credentials via API, downloads resumes, and runs the entire pipeline with a single command based on candidate-specific flags.
 - ✨ **AI/ML Validation** — Automatically skips job postings that do not pass AI/ML relevance checks.
 
 ## Quick Start
@@ -76,7 +77,22 @@ python run.py --user Your_Name
 
 # Preview emails without sending (dry-run mode)
 python run.py --user Your_Name --dry-run
+
+# Run web-based automation (fetches enabled candidates from Whitebox API)
+python run.py --web --dry-run
 ```
+
+## Web-Based Automation Workflow
+
+The system supports a fully automated web workflow designed for recruiters and marketing managers:
+
+1. **Flag-Based Triggering:** The tool fetches all marketing candidates and filters for those with the `Run Raw Positions Workflow` field set to **True** (or 'Yes').
+2. **Dynamic Data Fetching:** For each enabled candidate, the tool automatically:
+   - Downloads the latest **Resume PDF**.
+   - Parses the **Candidate JSON** profile.
+   - Retrieves specific email and LinkedIn credentials.
+3. **Isolated Environments:** To prevent credential leakage, the tool creates a temporary isolated environment for each candidate. This includes separate Google OAuth tokens, ensuring that the automation runs as the candidate themselves.
+4. **End-to-End Orchestration:** The pipeline runs automatically for all enabled candidates in a single execution, reporting individual success and failure metrics back to the central Whitebox dashboard.
 
 ## Resume JSON Format
 
@@ -155,6 +171,7 @@ Raw_Positions_Auto_Apply/
 | `ollama.model` | Local model (e.g., llama3.2:3b) | `llama3.2:3b` |
 | `ollama.timeout_seconds` | Strict max generation time | `40` |
 | `gmail.cooldown_every_n_emails` | Anti-rate limiting chunks | `10` |
+| `web_extraction.enabled_field` | API field to trigger workflow | `run_raw_positions_workflow` |
 | `resume.json_path` / `pdf_path` | Resume paths | `null` (auto) |
 
 ## Troubleshooting
