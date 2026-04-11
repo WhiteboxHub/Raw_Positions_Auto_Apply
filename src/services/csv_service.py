@@ -129,17 +129,22 @@ class CSVService:
                     })
                     
             # Apply Partitioning logic if configured
-            if self.partition_config and self.partition_config.get("total", 1) > 1:
-                total = self.partition_config["total"]
-                index = self.partition_config["index"]
+            if self.partition_config and int(self.partition_config.get("total", 1)) > 1:
+                total = int(self.partition_config["total"])
+                index = int(self.partition_config["index"])
                 
                 my_partition = [row for i, row in enumerate(valid_rows) if i % total == index]
                 logger.info(f"Partition check: Total valid {len(valid_rows)}, this profile took {len(my_partition)} (idx {index} of {total})")
                 valid_rows = my_partition
                 
             # Now apply limit to the resulting subset
-            if limit and len(valid_rows) > limit:
-                valid_rows = valid_rows[:limit]
+            if limit is not None:
+                try:
+                    limit_int = int(limit)
+                    if len(valid_rows) > limit_int:
+                        valid_rows = valid_rows[:limit_int]
+                except (ValueError, TypeError):
+                    logger.warning(f"Invalid limit value '{limit}', skipping limit check.")
                 
             logger.info(f"CSV read complete: {len(valid_rows)} partitioned target rows (total skipped {len(skipped_rows)})")
             return valid_rows, skipped_rows

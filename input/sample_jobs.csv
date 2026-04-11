@@ -1,1 +1,4 @@
 "ID","Title","Company","Location","Source","Source UID","Candidate ID","Zip","Contact Info","Payload","Extractor Version","Error Message","Extracted At","Processed At","Description","Notes"
+"1","AI Python Developer","Google","Mountain View","LinkedIn","123","1","94043","recruiter@google.com","{}","1.0","","2026-04-11","","Looking for an expert Python developer for our AI team.",""
+"2","ML Frontend Engineer","Meta","Menlo Park","LinkedIn","456","1","94025","hr@meta.com","{}","1.0","","2026-04-11","","Machine Learning React expert needed.",""
+"3","Backend AI dev","Twitter (X)","SF","X","789","1","94103","jobs@x.com","{}","1.0","","2026-04-11","","Artificial Intelligence Cloud expert.",""

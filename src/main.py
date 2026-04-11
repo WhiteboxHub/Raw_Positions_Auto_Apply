@@ -9,6 +9,7 @@ Usage:
 
 import argparse
 import sys
+import uuid
 from pathlib import Path
 
 # Force UTF-8 encoding for standard output across all platforms to avoid emoji crashes
@@ -25,6 +26,7 @@ from src.orchestrator import RawPositionsAutoApplyOrchestrator
 from src.services import DataFetcherService
 from src.config_loader import load_config
 from src.core.reporter import RawPositionsAutoApplyReporter
+from src.utils.sorting_utils import sort_candidates
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -86,9 +88,8 @@ Usage:
     )
 
     parser.add_argument(
-        "--schedule-id",
-        type=int,
-        help="Schedule ID provided by the orchestrator API for tracking runs"
+        "--web-field",
+        help="Specific database field to check for enabled status (e.g. run_raw_positions_workflow)"
     )
 
     return parser.parse_args()
@@ -105,6 +106,8 @@ def main():
     else:
         from dotenv import load_dotenv
         load_dotenv()
+        
+    run_id = str(uuid.uuid4())
 
     try:
         config_dict = None
@@ -125,9 +128,19 @@ def main():
             users = [u.strip() for u in args.users.split(",") if u.strip()]
         elif args.user:
             users = [args.user]
+        elif args.web:
+            users = [None] # We run once in web mode which handles its own candidate fetching
         else:
             users = [None] # global config run
             
+        # Apply sorting to users if many are detected
+        if len(users) > 1 and all(isinstance(u, str) for u in users):
+            config_dict = config_dict or load_config(args.config).to_dict()
+            priority_order = config_dict.get("resume", {}).get("candidate_order", [])
+            if priority_order:
+                users = sort_candidates(users, priority_order)
+                print(f"Sorted users based on priority: {users}")
+
         total_users = len(users)
         consolidated_data = []
         
@@ -148,6 +161,8 @@ def main():
                  if fetched_csv:
                      orchestrator.config.setdefault("input", {})["csv_filename"] = fetched_csv
 
+            orchestrator.config["workflow_key"] = args.workflow_key
+
             # Pass the partition state down
             orchestrator.config["partition"] = {
                 "index": idx,
@@ -159,6 +174,7 @@ def main():
             # Store data for consolidated report
             consolidated_data.append({
                 "user_name": orchestrator._user_name,
+                "user_email": orchestrator.config.get("gmail", {}).get("user_email", "Unknown"),
                 "stats": orchestrator._stats,
                 "results": orchestrator._csv_results
             })
@@ -171,7 +187,7 @@ def main():
                 
         # Dispatch consolidated report
         if consolidated_data:
-            reporter = RawPositionsAutoApplyReporter(consolidated_data)
+            reporter = RawPositionsAutoApplyReporter(consolidated_data, run_id=run_id)
             reporter.send_report()
             
         if total_users > 1:
