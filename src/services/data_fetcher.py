@@ -89,7 +89,9 @@ class DataFetcherService:
                 params["page"] += 1
 
             if not all_jobs:
-                logger.warning(f"No new jobs found for today ({today_date}).")
+                logger.warning(f"No new jobs found for today ({today_date}). Clearing old data from {output_path}")
+                # Clear the file to prevent processing old data
+                self._save_to_csv([], output_path)
                 return False
 
             self._save_to_csv(all_jobs, output_path)

@@ -175,7 +175,7 @@ JOB POSTING:
 REQUIRED EMAIL FORMAT:
 Output strictly in this format:
 
-SUBJECT: Application for [Job Title] at [Company Name]
+SUBJECT: Application for [Job Title] at [Company Name] (MANDATORY: you must include 'at [Company Name]')
 
 BODY:
 {greeting}
@@ -236,7 +236,7 @@ Job posting context:
 {job_description[:500]}
 
 REQUIRED FORMAT:
-SUBJECT: <subject line here>
+SUBJECT: Application for [Job Title] at {company} (MANDATORY: must include 'at {company}')
 BODY:
 {greeting}
 
@@ -272,7 +272,7 @@ To: {company}
 Job snippet: {job_description[:200]}
 
 Required Output format (use these exact labels):
-SUBJECT: Application from {name}
+SUBJECT: Application for [Job Title] from {name} at {company} (MANDATORY: must include 'at {company}')
 BODY:
 Dear Hiring Manager,
 

@@ -12,6 +12,7 @@ Automated email generation and sending for job applications using local Ollama L
 - 🎯 **Batch & API Processing** — Process multiple job postings from CSV or dynamically fetch them each day via the Whitebox Learning API.
 - 👥 **Multi-Profile Support** — Run the system seamlessly for multiple users (e.g., `python run.py --user John`).
 - 📊 **Tracking & Orchestrator API** — Prevents duplicate emails across all runs by tracking recipient emails. Logs workflow metrics, skips, and failures directly to the central Orchestrator dashboard.
+- 🌐 **Web-Based Orchestration** — Automatically pulls candidate profiles and credentials via API, downloads resumes, and runs the entire pipeline with a single command based on candidate-specific flags.
 - ✨ **AI/ML Validation** — Automatically skips job postings that do not pass AI/ML relevance checks.
 
 ## Quick Start
@@ -65,18 +66,60 @@ ollama:
   llm_quality_retries: 3
 ```
 
-### 5. Run
+## Execution Modes
+
+The tool supports several ways to run the automation pipeline, depending on whether you are running for yourself or orchestrating multiple profiles.
+
+### 1. Individual Local Run
+Use this to run the pipeline for a specific candidate whose resume and tokens are stored in `resume/<USER_NAME>/`.
+```bash
+# Fetch fresh jobs and run for a specific user
+python run.py --user Bavish --fetch
+
+# Preview only (no emails sent)
+python run.py --user Bavish --fetch --dry-run
+```
+
+### 2. Distributed Multi-User Run (Load Balancing)
+Split the daily workload evenly across multiple profiles to avoid rate limiting and maximize reach. The tool divides the valid job list by the number of users.
 
 ```bash
-# Fetch fresh jobs from API and send emails for the default setup
-python run.py
+# Automatically detect all folders in resume/ and split jobs among them
+python run.py --run-all --fetch
 
-# Run for a specific user profile (ideal for scheduled tasks)
-python run.py --user Your_Name
-
-# Preview emails without sending (dry-run mode)
-python run.py --user Your_Name --dry-run
+# Run for a specific subset of profiles
+python run.py --users Bavish,Ravi,Ramana --fetch
 ```
+
+### 3. Web-Based Orchestration (Whitebox Integration)
+This mode connects to the Whitebox Learning API to identify which candidates have the **"Run Raw Positions Workflow"** flag enabled on the marketing page.
+
+```bash
+# Fetch enabled candidates from the marketing portal and run sequentially
+python run.py --web
+```
+*This mode automatically downloads resumes, fetches candidate-specific tokens, and cleans up temporary files after execution.*
+
+### 4. Utility Commands
+```bash
+# Fetch fresh jobs from API without running the full pipeline
+python run.py --fetch
+
+# Run with custom config file
+python run.py --config my_custom_config.yaml
+```
+
+## Web-Based Automation Workflow
+
+The system supports a fully automated web workflow designed for recruiters and marketing managers:
+
+1. **Flag-Based Triggering:** The tool fetches all marketing candidates and filters for those with the `Run Raw Positions Workflow` field set to **True** (or 'Yes').
+2. **Dynamic Data Fetching:** For each enabled candidate, the tool automatically:
+   - Downloads the latest **Resume PDF**.
+   - Parses the **Candidate JSON** profile.
+   - Retrieves specific email and LinkedIn credentials.
+3. **Isolated Environments:** To prevent credential leakage, the tool creates a temporary isolated environment for each candidate. This includes separate Google OAuth tokens, ensuring that the automation runs as the candidate themselves.
+4. **End-to-End Orchestration:** The pipeline runs automatically for all enabled candidates in a single execution, reporting individual success and failure metrics back to the central Whitebox dashboard.
 
 ## Resume JSON Format
 
@@ -141,6 +184,7 @@ Raw_Positions_Auto_Apply/
 ├── data/                      # Sent emails database (deduplication)
 ├── tests/                     # Unit test suite
 ├── config.yaml                # Configuration registry
+├── run.py                     # Convenience bootstrapper
 └── run.py                     # Convenience bootstrapper
 ```
 
@@ -155,6 +199,7 @@ Raw_Positions_Auto_Apply/
 | `ollama.model` | Local model (e.g., llama3.2:3b) | `llama3.2:3b` |
 | `ollama.timeout_seconds` | Strict max generation time | `40` |
 | `gmail.cooldown_every_n_emails` | Anti-rate limiting chunks | `10` |
+| `web_extraction.enabled_field` | API field to trigger workflow | `run_raw_positions_workflow` |
 | `resume.json_path` / `pdf_path` | Resume paths | `null` (auto) |
 
 ## Troubleshooting

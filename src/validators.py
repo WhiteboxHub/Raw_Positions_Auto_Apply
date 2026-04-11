@@ -244,9 +244,13 @@ class PreflightValidator:
         try:
             from src.services import GmailAPISender
 
+            # Path to token file (for isolation between users/runs)
+            token_path = self.config.get("gmail", {}).get("token_path")
+
             sender = GmailAPISender(
                 credentials_path=credentials_path,
                 resume_pdf_path=resume_pdf_path,
+                token_path=token_path,
                 test_mode=False
             )
 

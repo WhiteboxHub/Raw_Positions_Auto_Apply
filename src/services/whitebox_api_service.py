@@ -51,9 +51,9 @@ class WhiteboxAPIService:
                 
             enabled_candidates = []
             for c in candidates:
-                # Check the enabled field. We handle 'Yes', True, or 'true' (string)
+                # Check the enabled field. We handle 'Yes', True, 'true' (string), or 1 (integer)
                 val = c.get(self.enabled_field)
-                if val in ["Yes", True, "true", "YES"]:
+                if val in ["Yes", True, "true", "YES", 1, "1"]:
                     enabled_candidates.append(c)
             
             logger.info(f"Found {len(enabled_candidates)} enabled candidates out of {len(candidates)}")
