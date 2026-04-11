@@ -37,11 +37,13 @@ class ResumeHandler:
             
             name = ResumeHandler._extract_name(raw_data)
             skills = ResumeHandler._extract_skills(raw_data)
+            industry = ResumeHandler._extract_industry(raw_data)
             total_experience = raw_data.get("cv", {}).get("total_experience", "")
             
             resume.data = ResumeData(
                 name=name,
                 total_experience=total_experience,
+                industry=industry,
                 skills=skills,
                 raw_data=raw_data
             )
@@ -76,3 +78,36 @@ class ResumeHandler:
             logger.debug(f"Failed to extract skills: {e}")
         
         return []
+    @staticmethod
+    def _extract_industry(resume_data: dict) -> str:
+        """Extract professional industry/field from resume."""
+        try:
+            cv = resume_data.get("cv", {})
+            sections = cv.get("sections", {})
+            
+            # 1. Try most recent job position
+            experience = sections.get("experience", [])
+            if experience and isinstance(experience, list):
+                # Assume first one is most recent
+                most_recent = experience[0]
+                position = most_recent.get("position", "")
+                if position:
+                    # Clean up position to get a "field"
+                    # e.g., "Senior AI Engineer" -> "AI Engineering"
+                    field = position.replace("Senior ", "").replace("Junior ", "").replace("Lead ", "")
+                    if "Engineer" in field:
+                        field = field.replace("Engineer", "Engineering")
+                    elif "Developer" in field:
+                        field = field.replace("Developer", "Development")
+                    return field
+            
+            # 2. Try education area
+            education = sections.get("education", [])
+            if education and isinstance(education, list):
+                area = education[0].get("area", "")
+                if area:
+                    return area
+        except Exception as e:
+            logger.debug(f"Failed to extract industry: {e}")
+            
+        return "Software Engineering"

@@ -12,15 +12,27 @@ logger = logging.getLogger(__name__)
 class WhiteboxAPIService:
     """Service to fetch candidate profiles and credentials from Whitebox API."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], enabled_field: Optional[str] = None):
         """Initialize WhiteboxAPIService."""
         self.config = config
         self.web_config = config.get("web_extraction", {})
         self.api_url = self.web_config.get("api_url", "https://api.whitebox-learning.com/api/candidate/marketing")
-        self.enabled_field = self.web_config.get("enabled_field", "run_smartapply")
-        self.bearer_token = os.environ.get("WBL_API_TOKEN") or os.environ.get("WHITEBOX_BEARER_TOKEN")
         
-        self.tmp_dir = Path("tmp/web_profiles")
+        # Priority: 1. Argument, 2. Config, 3. Smart Default (raw_positions_auto_apply), 4. Default
+        self.enabled_field = enabled_field or self.web_config.get("enabled_field")
+        if not self.enabled_field:
+            workflow_key = config.get("workflow_key", "raw_positions_auto_apply")
+            if workflow_key == "raw_positions_auto_apply":
+                self.enabled_field = "run_raw_positions_workflow"
+            else:
+                self.enabled_field = "run_smartapply"
+                
+        # Consolidate bearer token: WBL_API_TOKEN is preferred, but check others for compatibility
+        self.bearer_token = os.environ.get("WBL_API_TOKEN") or \
+                            os.environ.get("WHITEBOX_BEARER_TOKEN") or \
+                            os.environ.get("BEARER_TOKEN")
+        
+        self.tmp_dir = Path(self.web_config.get("temp_dir", "tmp/web_profiles"))
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
 
     def fetch_enabled_candidates(self) -> List[Dict[str, Any]]:

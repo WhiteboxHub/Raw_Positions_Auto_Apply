@@ -9,6 +9,7 @@ class ResumeData:
     """Resume information extracted from JSON."""
     name: str
     total_experience: str = ""
+    industry: str = ""
     skills: List[str] = field(default_factory=list)
     raw_data: Dict[str, Any] = field(default_factory=dict)
 

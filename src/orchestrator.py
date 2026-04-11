@@ -22,6 +22,7 @@ from src.services import CSVService, OllamaService, EmailGeneratorService, Email
 from src.models import AppConfig
 from src.core import ResumeHandler, WorkflowManager, RawPositionsAutoApplyReporter
 from src.validators import PreflightValidator
+from src.utils.sorting_utils import sort_candidates
 
 
 logger = logging.getLogger(__name__)
@@ -102,7 +103,8 @@ class RawPositionsAutoApplyOrchestrator:
 
     def _run_web_workflow(self, args, workflow_manager, run_id) -> int:
         """Fetch candidates from API and run for each one."""
-        api_service = WhiteboxAPIService(self.config)
+        web_field = getattr(args, 'web_field', None)
+        api_service = WhiteboxAPIService(self.config, enabled_field=web_field)
         try:
             candidates = api_service.fetch_enabled_candidates()
             if not candidates:
@@ -111,6 +113,12 @@ class RawPositionsAutoApplyOrchestrator:
 
             self.logger.info(f"🚀 Starting web workflow for {len(candidates)} candidates")
             
+            # Sort candidates based on priority order in config
+            priority_order = self.config.get("resume", {}).get("candidate_order", [])
+            if priority_order:
+                candidates = sort_candidates(candidates, priority_order, name_key="full_name")
+                self.logger.info(f"Sorted candidates based on priority: {[c.get('full_name') for c in candidates]}")
+
             overall_status = 0
             for idx, candidate in enumerate(candidates):
                 name = candidate.get("full_name", "Unknown")
@@ -392,6 +400,7 @@ class RawPositionsAutoApplyOrchestrator:
         # The NEXT email's generation is kicked off AFTER user confirmation (Y/N),
         # so background log messages don't pollute the input() prompt.
         # During the Gmail send delay (30-60s), the next email generates in parallel.
+        batch_start_time = time.time()
         with ThreadPoolExecutor(max_workers=1) as executor:
             next_email_future: Future = executor.submit(_generate_for_row, valid_rows[0]) if valid_rows else None
 
@@ -406,7 +415,20 @@ class RawPositionsAutoApplyOrchestrator:
                     # Get contact info DIRECTLY from CSV "Contact Info" column (not from Payload)
                     contact_info = row.get("raw_data", {}).get("Contact Info", "").strip()
 
-                    self.logger.info(f"[{row_idx + 1}/{len(valid_rows)}] Processing {email} (Company: {company})")
+                    # --- ETA Calculation ---
+                    elapsed_batch = time.time() - batch_start_time
+                    if row_idx > 0:
+                        avg_time_per_item = elapsed_batch / row_idx
+                    else:
+                        # Initial conservative estimate: 
+                        # Delay (avg 45s) + LLM (avg 25s) + Cooldown (avg 240/10 = 24s) = ~94s
+                        avg_time_per_item = 94.0
+                    
+                    remaining_items = len(valid_rows) - row_idx
+                    eta_seconds = remaining_items * avg_time_per_item
+                    eta_str = f" (Remaining: {self._format_duration(eta_seconds)})"
+
+                    self.logger.info(f"[{row_idx + 1}/{len(valid_rows)}] Processing {email} (Company: {company}){eta_str}")
 
                     # --- Prefetch: get the pre-generated email from the background thread ---
                     self.logger.info(f"  ⏳ Waiting for LLM generation to complete...")
@@ -838,3 +860,18 @@ Success Rate:     {success_rate:.1f}%
                 self.logger.warning(f"  - {error['email']}: {error['reason']}")
             if len(stats["errors"]) > 5:
                 self.logger.warning(f"  ... and {len(stats['errors']) - 5} more")
+
+    def _format_duration(self, seconds: float) -> str:
+        """Format seconds into a human-readable duration string."""
+        if seconds < 0:
+            return "0s"
+        
+        minutes, sec = divmod(int(seconds), 60)
+        hours, minutes = divmod(minutes, 60)
+        
+        if hours > 0:
+            return f"{hours}h {minutes}m {sec}s"
+        elif minutes > 0:
+            return f"{minutes}m {sec}s"
+        else:
+            return f"{sec}s"

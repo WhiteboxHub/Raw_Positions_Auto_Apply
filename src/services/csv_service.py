@@ -26,6 +26,11 @@ class CSVService:
         "position", "job", "role", "opportunity"
     ]
 
+    DISALLOWED_EMPLOYMENT_KEYWORDS = [
+        "free lancing", "freelance", "freelancing",
+        "part time", "part-time"
+    ]
+
     def __init__(self, input_dir: str, sent_emails_db: str, column_mapping: Optional[Dict[str, str]] = None, dry_run: bool = False, partition_config: Optional[Dict[str, int]] = None):
         """
         Initialize CSVService.
@@ -124,17 +129,22 @@ class CSVService:
                     })
                     
             # Apply Partitioning logic if configured
-            if self.partition_config and self.partition_config.get("total", 1) > 1:
-                total = self.partition_config["total"]
-                index = self.partition_config["index"]
+            if self.partition_config and int(self.partition_config.get("total", 1)) > 1:
+                total = int(self.partition_config["total"])
+                index = int(self.partition_config["index"])
                 
                 my_partition = [row for i, row in enumerate(valid_rows) if i % total == index]
                 logger.info(f"Partition check: Total valid {len(valid_rows)}, this profile took {len(my_partition)} (idx {index} of {total})")
                 valid_rows = my_partition
                 
             # Now apply limit to the resulting subset
-            if limit and len(valid_rows) > limit:
-                valid_rows = valid_rows[:limit]
+            if limit is not None:
+                try:
+                    limit_int = int(limit)
+                    if len(valid_rows) > limit_int:
+                        valid_rows = valid_rows[:limit_int]
+                except (ValueError, TypeError):
+                    logger.warning(f"Invalid limit value '{limit}', skipping limit check.")
                 
             logger.info(f"CSV read complete: {len(valid_rows)} partitioned target rows (total skipped {len(skipped_rows)})")
             return valid_rows, skipped_rows
@@ -246,6 +256,12 @@ class CSVService:
 
         if not self._is_valid_email(email):
             return f"invalid_email_format"
+            
+        # Check for disallowed employment types (freelance, part-time)
+        for keyword in self.DISALLOWED_EMPLOYMENT_KEYWORDS:
+            if re.search(r'\b' + re.escape(keyword) + r'\b', combined_text, re.IGNORECASE):
+                logger.info(f"Skipping row {row_idx}: Disallowed employment type keyword '{keyword}' found")
+                return "disallowed_employment_type"
 
         return None
 

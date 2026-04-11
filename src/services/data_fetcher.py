@@ -21,7 +21,9 @@ class DataFetcherService:
         self.output_filename = self.fetcher_config.get("output_filename", "daily_jobs.csv")
         
         self.input_dir = Path(config.get("file_paths", {}).get("input_dir", "input"))
-        self.bearer_token = os.environ.get("WHITEBOX_BEARER_TOKEN")
+        self.bearer_token = os.environ.get("WBL_API_TOKEN") or \
+                            os.environ.get("WHITEBOX_BEARER_TOKEN") or \
+                            os.environ.get("BEARER_TOKEN")
 
     def fetch_daily_data(self) -> bool:
         """Fetch today's job data and save it to the daily CSV."""

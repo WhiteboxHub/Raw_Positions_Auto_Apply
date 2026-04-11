@@ -171,6 +171,7 @@ JOB POSTING:
 {job_description}
 
 {tech_mapping}
+PAST/CURRENT INDUSTRY: {self.resume_data.industry} (Use this for the candidate's professional field)
 
 REQUIRED EMAIL FORMAT:
 Output strictly in this format:
@@ -195,7 +196,8 @@ Regards,
 {self.user_name}
 
 FINAL CONSTRAINTS:
-- No placeholders like [Job Title] in the final output.
+- No placeholders like [Job Title] or [industry/field] or [Company Name] in the final output. Replace them with actual data.
+- If you don't know the specific industry, use "{self.resume_data.industry}".
 - Total body word count < 75.
 - Output the labels "SUBJECT:" and "BODY:"!
 
@@ -231,6 +233,7 @@ Company: {company}
 Candidate name: {self.user_name}
 Candidate total experience: {self.resume_data.total_experience} (Use this exact value if mentioning years of experience)
 Candidate top skills: {skills_str}
+Candidate professional field: {self.resume_data.industry}
 
 Job posting context:
 {job_description[:500]}
@@ -246,6 +249,9 @@ I have attached my resume for your reference.
 
 Regards,
 {self.user_name}
+
+- No placeholders. If you're missing info, be generic but NO BRACKETS like [industry/field].
+- Use "{self.resume_data.industry}" as the candidate's field.
 
 WRITE THE EMAIL NOW:"""
 
@@ -268,6 +274,7 @@ WRITE THE EMAIL NOW:"""
 Draft from: {name}
 Total Experience: {self.resume_data.total_experience}
 To: {company}
+Professional Field: {self.resume_data.industry}
 
 Job snippet: {job_description[:200]}
 

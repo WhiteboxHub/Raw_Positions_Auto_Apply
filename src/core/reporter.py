@@ -9,8 +9,9 @@ logger = logging.getLogger(__name__)
 
 class RawPositionsAutoApplyReporter:
     """Handles email reporting for Raw_Positions_Auto_Apply runs."""
-    def __init__(self, consolidated_data):
+    def __init__(self, consolidated_data, run_id=None):
         self.consolidated_data = consolidated_data
+        self.run_id = run_id or "N/A"
         
         # Pull SMTP from .env using Gmail account used to send applications
         self.email_from = os.getenv("GMAIL_ADDRESS")
@@ -59,7 +60,7 @@ class RawPositionsAutoApplyReporter:
             return True
             
         msg = MIMEMultipart()
-        # Set explicitly the display name so that emails don't visually group under a single account sender name in Gmail UI
+        # Set explicitly the display name
         msg['From'] = f"Raw_Positions_Auto_Apply System <{self.email_from}>"
         msg['To'] = ', '.join(self.email_to)
         msg['Subject'] = subject
@@ -78,116 +79,212 @@ class RawPositionsAutoApplyReporter:
 
     def _generate_html_report(self):
         try:
-            html_body = f"""
-            <html>
-            <body style="font-family: Arial, sans-serif; background-color: #f9fafb; color: #111827; padding: 20px;">
-                <h2 style="color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">Raw_Positions_Auto_Apply Consolidated Report</h2>
-                <p><strong>Date:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-            """
+            now = datetime.now()
+            date_str = now.strftime('%B %d, %Y')
+            time_str = now.strftime('%I:%M %p')
             
-            total_processed = 0
-            total_sent = 0
-            total_skipped = 0
-            total_failed = 0
-            
-            for run in self.consolidated_data:
-                results = run.get('results', [])
-                stats = run.get('stats', {})
-                total_processed += len(results)
-                total_sent += stats.get('sent', 0)
-                total_skipped += stats.get('skipped', 0)
-                total_failed += stats.get('failed', 0)
-                
-            success_rate = (total_sent / total_processed * 100) if total_processed else 0
-            
-            html_body += f"""
-                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 30px;">
-                    <h3 style="color: #1e3a8a; margin-top: 0;">Overall Run Summary</h3>
-                    <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
-                        <tr>
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left;">Total Processed</th>
-                            <td style="padding: 10px; border: 1px solid #e5e7eb;">{total_processed}</td>
-                        </tr>
-                        <tr style="background-color: #f8f9fa;">
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left; color: #10b981;">Successfully Sent</th>
-                            <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold;">{total_sent}</td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left; color: #f59e0b;">Skipped / Validation Failed</th>
-                            <td style="padding: 10px; border: 1px solid #e5e7eb;">{total_skipped}</td>
-                        </tr>
-                        <tr style="background-color: #f8f9fa;">
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left; color: #ef4444;">Errors / Failed</th>
-                            <td style="padding: 10px; border: 1px solid #e5e7eb;">{total_failed}</td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left;">Success Rate</th>
-                            <td style="padding: 10px; border: 1px solid #e5e7eb;">{success_rate:.1f}%</td>
-                        </tr>
-                    </table>
-                </div>
-            """
+            # Aggregate stats
+            total_candidates = len(self.consolidated_data)
+            total_extracted = 0
+            total_inserted = 0
+            successful_candidates_count = 0
+            failed_candidates_count = 0
+            failed_candidates_list = []
             
             for run in self.consolidated_data:
-                user_name = run.get('user_name', 'Unknown User')
                 stats = run.get('stats', {})
                 results = run.get('results', [])
+                user_name = run.get('user_name', 'Unknown')
+                user_email = run.get('user_email', 'Unknown')
                 
-                run_success_rate = (stats.get('sent', 0) / len(results) * 100) if results else 0
+                sends = stats.get('sent', 0)
+                fails = stats.get('failed', 0)
                 
-                html_body += f"""
-                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;">
-                    <h3 style="color: #2c3e50; margin-top: 0;">Profile: {user_name}</h3>
-                    
-                    <div style="display: flex; gap: 20px; font-size: 0.95em; color: #4b5563; margin-bottom: 15px;">
-                        <span><strong>Processed:</strong> {len(results)}</span>
-                        <span><strong style="color: #10b981;">Sent:</strong> {stats.get('sent', 0)}</span>
-                        <span><strong style="color: #f59e0b;">Skipped:</strong> {stats.get('skipped', 0)}</span>
-                    </div>
-                """
+                total_extracted += len(results)
+                total_inserted += sends
                 
-                if results:
-                    summary_rows = ""
-                    for r in results:
-                        status = r.get("sent_status", "unknown")
-                        color = "#10b981" if status == "success" else "#f59e0b" if status in ["skipped", "user_skipped"] else "#ef4444"
-                        email = r.get("Contact Info", "") or r.get("contact_email", "") or "Unknown"
-                        
-                        summary_rows += f"""
-                        <tr style="border-bottom: 1px solid #e5e7eb;">
-                            <td style='padding: 8px; border: 1px solid #e5e7eb;'>{r.get('Company', 'N/A')}</td>
-                            <td style='padding: 8px; border: 1px solid #e5e7eb;'>{email}</td>
-                            <td style='padding: 8px; border: 1px solid #e5e7eb;'><span style="color: {color}; font-weight: bold;">{status.upper()}</span></td>
-                            <td style='padding: 8px; border: 1px solid #e5e7eb; font-size: 0.9em; color: #6b7280;'>{r.get('error', '')}</td>
-                        </tr>
-                        """
-                        
-                    html_body += f"""
-                    <table style="border-collapse: collapse; width: 100%; font-size: 0.95em;">
-                        <tr style="background-color: #f3f4f6; color: #374151;">
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left;">Company</th>
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left;">Email</th>
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left;">Status</th>
-                            <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left;">Details</th>
-                        </tr>
-                        {summary_rows}
-                    </table>
-                    """
+                # A candidate is "failed" if they have 0 successful sends and at least one fail, 
+                # or if the errors indicate a fatal setup issue.
+                if sends == 0 and (fails > 0 or not results):
+                    failed_candidates_count += 1
+                    error_msg = stats.get('errors', [{}])[0].get('reason', 'Unknown initialization error') if stats.get('errors') else "No jobs matched or authentication failed"
+                    failed_candidates_list.append({
+                        "name": user_name,
+                        "email": user_email,
+                        "error": error_msg
+                    })
                 else:
-                    html_body += "<p style='color: #6b7280; font-style: italic;'>No jobs processed for this profile.</p>"
-                    
-                html_body += "</div>"
+                    successful_candidates_count += 1
 
-            html_body += """
-                <p style="margin-top: 40px; font-size: 0.85em; color: #9ca3af; text-align: center;">
-                    <em>This is an automated consolidated report from Raw_Positions_Auto_Apply.</em>
-                </p>
-            </body>
-            </html>
-            """
+            success_rate = (successful_candidates_count / total_candidates * 100) if total_candidates else 0
             
-            subject = f"Raw_Positions_Auto_Apply Consolidated Report - {datetime.now().strftime('%Y-%m-%d')}"
-            return subject, html_body
+            # Start building HTML
+            html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f7f9; color: #333; }}
+        .header {{ background: linear-gradient(135deg, #1e4eb8 0%, #3b82f6 100%); color: white; padding: 40px 20px; text-align: left; border-radius: 8px 8px 0 0; }}
+        .header h1 {{ margin: 10px 0 5px 0; font-size: 28px; font-weight: bold; }}
+        .header p {{ margin: 0; font-size: 14px; opacity: 0.9; }}
+        .header .sub {{ font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }}
+        .content {{ padding: 30px; max-width: 900px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: -20px; }}
+        .intro-text {{ color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 25px; }}
+        
+        .cards {{ display: flex; justify-content: space-between; gap: 15px; margin-bottom: 30px; }}
+        .card {{ flex: 1; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }}
+        .card .val {{ font-size: 24px; font-weight: bold; display: block; margin-bottom: 5px; }}
+        .card .lab {{ font-size: 10px; font-weight: bold; text-transform: uppercase; color: #888; letter-spacing: 0.5px; }}
+        
+        .card-blue {{ background-color: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; }}
+        .card-green {{ background-color: #f0fdf4; border: 1px solid #dcfce7; color: #166534; }}
+        .card-red {{ background-color: #fef2f2; border: 1px solid #fee2e2; color: #991b1b; }}
+        .card-teal {{ background-color: #f0fdfa; border: 1px solid #ccfbf1; color: #115e59; }}
+        .card-orange {{ background-color: #fffbeb; border: 1px solid #fef3c7; color: #92400e; }}
+        
+        .section-title {{ font-size: 18px; font-weight: bold; margin: 30px 0 15px 0; display: flex; align-items: center; color: #111; }}
+        .section-title span {{ margin-right: 10px; }}
+        
+        table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+        th {{ background-color: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; text-align: left; padding: 12px 15px; border-bottom: 1px solid #e2e8f0; }}
+        td {{ padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }}
+        .metric-row:hover {{ background-color: #f8fafc; }}
+        .metric-name {{ color: #475569; }}
+        .metric-val {{ text-align: right; font-weight: 600; color: #1e293b; }}
+        
+        .failed-header {{ color: #dc2626; font-size: 16px; font-weight: bold; margin-bottom: 15px; }}
+        .failed-table th {{ background-color: #fef2f2; color: #991b1b; }}
+        .failed-table td {{ vertical-align: top; }}
+        .error-text {{ color: #dc2626; font-size: 12px; line-height: 1.4; }}
+        
+        .footer {{ text-align: center; padding: 30px; font-size: 12px; color: #94a3b8; line-height: 1.8; }}
+        .footer .run-it {{ font-family: monospace; color: #cbd5e1; margin-top: 10px; display: block; }}
+    </style>
+</head>
+<body>
+    <div style="max-width: 900px; margin: 20px auto;">
+        <div class="header">
+            <div class="sub">WHITEBOX LEARNING</div>
+            <h1>Raw Positions Auto Apply Report</h1>
+            <p>Run completed on {date_str} at {time_str}</p>
+        </div>
+        
+        <div class="content">
+            <p class="intro-text">
+                This report summarises the email application run that processed all active candidates. 
+                The run completed in the expected window with the following overall metrics.
+            </p>
+            
+            <div class="cards">
+                <div class="card card-blue">
+                    <span class="val">{total_candidates}</span>
+                    <span class="lab">CANDIDATES</span>
+                </div>
+                <div class="card card-green">
+                    <span class="val">{successful_candidates_count}</span>
+                    <span class="lab">SUCCESS</span>
+                </div>
+                <div class="card card-red">
+                    <span class="val">{failed_candidates_count}</span>
+                    <span class="lab">FAILED</span>
+                </div>
+                <div class="card card-teal">
+                    <span class="val">{total_extracted}</span>
+                    <span class="lab">EXTRACTED</span>
+                </div>
+                <div class="card card-orange">
+                    <span class="val">{total_inserted}</span>
+                    <span class="lab">INSERTED (NEW)</span>
+                </div>
+            </div>
+            
+            <div class="section-title">
+                <span>📊</span> Run Overview
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 70%;">METRIC</th>
+                        <th style="text-align: right;">VALUE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="metric-row">
+                        <td class="metric-name">Total Candidates Processed</td>
+                        <td class="metric-val">{total_candidates}</td>
+                    </tr>
+                    <tr class="metric-row">
+                        <td class="metric-name">Successful Candidates</td>
+                        <td class="metric-val" style="color: #16a34a;">{successful_candidates_count}</td>
+                    </tr>
+                    <tr class="metric-row">
+                        <td class="metric-name">Failed Candidates</td>
+                        <td class="metric-val" style="color: #dc2626;">{failed_candidates_count}</td>
+                    </tr>
+                    <tr class="metric-row">
+                        <td class="metric-name">Contacts Extracted (Passed Filters)</td>
+                        <td class="metric-val" style="color: #0d9488;">{total_extracted}</td>
+                    </tr>
+                    <tr class="metric-row">
+                        <td class="metric-name">Contacts Inserted (New to DB)</td>
+                        <td class="metric-val" style="color: #ea580c;">{total_inserted}</td>
+                    </tr>
+                    <tr class="metric-row">
+                        <td class="metric-name">Success Rate</td>
+                        <td class="metric-val" style="color: #2563eb;">{success_rate:.0f}%</td>
+                    </tr>
+                </tbody>
+            </table>
+"""
+
+            # Add Failed Candidates Section if any
+            if failed_candidates_list:
+                html += f"""
+            <div class="failed-header">
+                ❌ Failed Candidates ({len(failed_candidates_list)})
+            </div>
+            
+            <table class="failed-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">NAME</th>
+                        <th style="width: 30%;">EMAIL</th>
+                        <th>ERROR / CAUSE</th>
+                    </tr>
+                </thead>
+                <tbody>
+"""
+                for fc in failed_candidates_list:
+                    html += f"""
+                    <tr>
+                        <td>{fc['name']}</td>
+                        <td><a href="mailto:{fc['email']}" style="color: #3b82f6; text-decoration: none;">{fc['email']}</a></td>
+                        <td class="error-text">{fc['error']}</td>
+                    </tr>
+"""
+                html += """
+                </tbody>
+            </table>
+"""
+
+            html += f"""
+        </div>
+        
+        <div class="footer">
+            This is an automated report generated by the WBL Email Extraction System.<br>
+            <span class="run-it">Run ID: {self.run_id}</span>
+        </div>
+    </div>
+</body>
+</html>
+"""
+            subject = f"Raw Positions Auto Apply Report - {date_str}"
+            return subject, html
+        except Exception as e:
+            logger.error(f"Error generating HTML report: {e}", exc_info=True)
+            return None, None
         except Exception as e:
             logger.error(f"Error generating HTML report: {e}")
             return None, None
