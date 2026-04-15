@@ -159,7 +159,8 @@ class GmailAPISender:
             msg = self._build_message(recipient_email, subject, body)
 
             # Send via Gmail API
-            message = {"raw": base64.urlsafe_b64encode(msg.as_bytes()).decode()}
+            from email.policy import SMTP
+            message = {"raw": base64.urlsafe_b64encode(msg.as_bytes(policy=SMTP)).decode()}
             result = self.service.users().messages().send(userId="me", body=message).execute()
             
             message_id = result.get("id", "unknown")
@@ -196,12 +197,12 @@ class GmailAPISender:
         if self.resume_pdf_path.exists():
             try:
                 with open(self.resume_pdf_path, "rb") as attachment:
-                    part = MIMEBase("application", "octet-stream")
+                    part = MIMEBase("application", "pdf")
                     part.set_payload(attachment.read())
                     encoders.encode_base64(part)
                     part.add_header(
                         "Content-Disposition",
-                        f"attachment; filename= {self.resume_pdf_path.name}",
+                        f'attachment; filename="{self.resume_pdf_path.name}"',
                     )
                     msg.attach(part)
             except Exception as e:

@@ -76,11 +76,15 @@ class RawPositionsAutoApplyOrchestrator:
         
         config_data = workflow_manager.get_workflow_config(workflow_key)
         workflow_id = config_data.get("id", 0) if config_data else 0
-        run_id = workflow_manager.start_run(workflow_id=workflow_id, schedule_id=schedule_id)
+        run_id = workflow_manager.start_run(
+            workflow_id=workflow_id,
+            schedule_id=schedule_id
+        )
         
         self._stats = {"sent": 0, "failed": 0, "skipped": 0, "errors": []}
         self._csv_results = []
         self._user_name = "Unknown User"
+        self._user_email = "Unknown"
 
         try:
             if getattr(args, 'web', False):
@@ -94,7 +98,13 @@ class RawPositionsAutoApplyOrchestrator:
                 run_id=run_id,
                 status=final_status,
                 records_processed=self._stats["sent"] + self._stats["skipped"] + self._stats["failed"],
-                records_failed=self._stats["failed"]
+                records_failed=self._stats["failed"],
+                execution_metadata={
+                    "candidate_name": self._user_name,
+                    "candidate_email": self._user_email,
+                    "emails_sent": self._stats["sent"],
+                    "emails_skipped": self._stats["skipped"]
+                }
             )
             if schedule_id:
                 workflow_manager.update_schedule_status(schedule_id=schedule_id)
@@ -121,7 +131,8 @@ class RawPositionsAutoApplyOrchestrator:
 
             overall_status = 0
             for idx, candidate in enumerate(candidates):
-                name = candidate.get("full_name", "Unknown")
+                # Get name from nested candidate object or top level
+                name = candidate.get("full_name") or candidate.get("candidate", {}).get("full_name", "Unknown")
                 candidate_id = candidate.get("id")
                 self.logger.info(f"\n{'='*80}\n👤 WEB PROFILE {idx+1}/{len(candidates)}: {name} (ID: {candidate_id})\n{'='*80}")
                 
@@ -130,6 +141,13 @@ class RawPositionsAutoApplyOrchestrator:
                 if not temp_profile_paths:
                     self.logger.error(f"Failed to setup profile for {name}. Skipping.")
                     continue
+                
+                # Set partition config based on current candidate index for equal job distribution
+                self.config["partition"] = {
+                    "index": idx,
+                    "total": len(candidates)
+                }
+                self.logger.info(f"Setting partition for {name}: {idx+1}/{len(candidates)}")
                 
                 # Run pipeline for this candidate
                 try:
@@ -150,18 +168,41 @@ class RawPositionsAutoApplyOrchestrator:
 
     def _setup_web_candidate(self, candidate: Dict[str, Any], api_service: WhiteboxAPIService) -> Optional[Dict[str, str]]:
         """Setup temporary files and config for a web-based candidate."""
-        name = candidate.get("full_name", "Unknown")
+        name = candidate.get("full_name") or candidate.get("candidate", {}).get("full_name", "Unknown")
         candidate_json = candidate.get("candidate_json")
-        resume_link = candidate.get("resume_link")
+        resume_link = candidate.get("resume_url") or candidate.get("resume_link")
         
         # Credentials
         email = candidate.get("email")
         password = candidate.get("password")
         imap_password = candidate.get("imap_password")
         linkedin_passwd = candidate.get("linkedin_passwd")
+
+        local_creds_path = None
+        local_token_path = None
+
+        if not candidate_json:
+            sanitized_name = "".join(c for c in name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_').lower()
+            # Try to match by real name folders like 'Ravi', 'Bavish' etc.
+            potential_dirs = [Path("resume") / name, Path("resume") / name.split()[0], Path("resume") / sanitized_name]
+            for d in potential_dirs:
+                if d.exists():
+                    # Look for any JSON file that might be the resume (excluding credentials.json)
+                    json_files = [f for f in d.glob("*.json") if f.name != "credentials.json"]
+                    if json_files:
+                        self.logger.info(f"Using local {json_files[0].name} fallback for {name} from {d}")
+                        with open(json_files[0], "r") as f:
+                            candidate_json = json.load(f)
+                        
+                        # Also check for credentials/token in this same folder
+                        if (d / "credentials.json").exists():
+                            local_creds_path = d / "credentials.json"
+                        if (d / "token.pickle").exists():
+                            local_token_path = d / "token.pickle"
+                        break
         
         if not candidate_json:
-            self.logger.warning(f"No candidate_json found for {name}")
+            self.logger.warning(f"No candidate_json found or local fallback for {name}")
             return None
 
         # 1. Create temporary resume JSON
@@ -182,6 +223,7 @@ class RawPositionsAutoApplyOrchestrator:
                 json.dump(profile_data, f)
             
             self.config.setdefault("resume", {})["json_path"] = str(json_path.resolve())
+            self.config["resume"]["json_path"] = str(json_path.resolve())
         except Exception as e:
             self.logger.error(f"Failed to save candidate JSON for {name}: {e}")
             return None
@@ -190,15 +232,31 @@ class RawPositionsAutoApplyOrchestrator:
         pdf_path = api_service.download_resume(resume_link, name)
         if pdf_path:
             self.config.setdefault("resume", {})["pdf_path"] = str(pdf_path.resolve())
+            self.config["resume"]["pdf_path"] = str(pdf_path.resolve())
         else:
             self.logger.warning(f"No resume PDF downloaded for {name}")
 
         # 3. Handle Credentials and isolation
         sanitized_name = "".join(c for c in name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_').lower()
-        token_path = tmp_dir / f"{sanitized_name}_token.pickle"
         
+        # Priority: Local token from fallback folder, then temporary token per candidate
+        if local_token_path:
+            token_path = local_token_path
+        else:
+            token_path = tmp_dir / f"{sanitized_name}_token.pickle"
+        
+        # Override credentials path if local found
+        if local_creds_path:
+            self.config.setdefault("gmail", {})["credentials_path"] = str(local_creds_path.resolve())
+            self.config["gmail"]["credentials_path"] = str(local_creds_path.resolve())
+            self.logger.info(f"Using local credentials.json for {name}")
+        else:
+            # Revert to global if not found for this candidate
+            default_creds = self.config.get("raw_config", {}).get("gmail", {}).get("credentials_path", "credentials.json")
+            self.config.setdefault("gmail", {})["credentials_path"] = default_creds
+            self.config["gmail"]["credentials_path"] = default_creds
+
         # We store candidate specific login info in config for potential future use or logging
-        # But we do NOT overwrite the global GMAIL_API_CREDENTIALS_PATH here.
         candidate_creds = {
             "email": email,
             "password": password,
@@ -210,6 +268,7 @@ class RawPositionsAutoApplyOrchestrator:
         
         # Ensure the candidate's email is used as the primary email in config for this run
         if email:
+            self._user_email = email
             self.config.setdefault("gmail", {})["user_email"] = email
 
         return {
@@ -244,6 +303,10 @@ class RawPositionsAutoApplyOrchestrator:
         try:
             resume = ResumeHandler.load_resume(resume_json_path)
             self._user_name = resume.data.name
+            self._user_email = resume.data.email
+            
+            # Carry over to config for reporting
+            self.config.setdefault("gmail", {})["user_email"] = self._user_email
         except Exception as e:
             self.logger.error(f"Failed to load resume: {e}")
             return 1
@@ -253,11 +316,13 @@ class RawPositionsAutoApplyOrchestrator:
         if not sanitized_user:
             sanitized_user = "user"
 
-        default_db_path = Path("data/sent_emails.json")
-        configured_db = self.config.get("file_paths", {}).get("sent_emails_db", str(default_db_path))
-        
-        # Use a common database file for all users
-        db_path = Path(configured_db)
+        # Use a user-specific database file if a user name is known, otherwise use global default
+        if self._user_name and self._user_name != "Unknown User":
+            db_path = Path("data") / f"sent_emails_{sanitized_user}.json"
+        else:
+            default_db_path = Path("data/sent_emails.json")
+            configured_db = self.config.get("file_paths", {}).get("sent_emails_db", str(default_db_path))
+            db_path = Path(configured_db)
 
         # Get column mapping from config (merged with any overrides)
         column_mapping = self.config.get("input", {}).get("column_mapping", {})
@@ -267,7 +332,8 @@ class RawPositionsAutoApplyOrchestrator:
             sent_emails_db=str(db_path),
             column_mapping=column_mapping,
             dry_run=self.dry_run,
-            partition_config=self.config.get("partition")
+            partition_config=self.config.get("partition"),
+            force_resend=self.config.get("email_processing", {}).get("force_resend", False)
         )
 
         try:
@@ -559,6 +625,7 @@ class RawPositionsAutoApplyOrchestrator:
 
                                 self._csv_results.append({
                                     **row["raw_data"],
+                                    "email": email,
                                     "sent_status": "success",
                                     "sent_at": datetime.now().isoformat(),
                                     "message_id": message_id,
@@ -627,8 +694,15 @@ class RawPositionsAutoApplyOrchestrator:
         return 0 if self._stats["failed"] == 0 else 1
 
     def _count_sent_today(self) -> int:
-        """Count how many emails have been sent today from sent_emails.json."""
-        sent_db_path = Path(self.config.get("file_paths", {}).get("sent_emails_db", "data/sent_emails.json"))
+        """Count how many emails have been sent today from the user-specific tracking database."""
+        # Recalculate db_path similar to how it's done in _execute_pipeline
+        sanitized_user = "".join(c for c in self._user_name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_').lower()
+        if not sanitized_user or self._user_name == "Unknown User":
+            default_db_path = Path("data/sent_emails.json")
+            sent_db_path = Path(self.config.get("file_paths", {}).get("sent_emails_db", str(default_db_path)))
+        else:
+            sent_db_path = Path("data") / f"sent_emails_{sanitized_user}.json"
+
         if not sent_db_path.exists():
             return 0
         try:
@@ -767,65 +841,101 @@ class RawPositionsAutoApplyOrchestrator:
             return
 
         html_path = output_dir / f"{base_name}_report_{timestamp}.html"
-        success_rate = (stats["sent"] / len(results) * 100) if results else 0
         
-        # Build Table rows dynamically
+        # Aggregate stats (recalculated for precision)
+        total = len(results)
+        sent = sum(1 for r in results if r.get('sent_status') == 'success')
+        failed = sum(1 for r in results if r.get('sent_status') == 'failed')
+        skipped = sum(1 for r in results if r.get('sent_status') in ['skipped', 'user_skipped', 'DRY-RUN'])
+        
+        success_rate = (sent / total * 100) if total else 0
+        
+        # Build Table rows
         rows_html = ""
         for r in results:
-            status = r.get("sent_status", "unknown")
-            color = "#10b981" if status == "success" else "#f59e0b" if status in ["skipped", "user_skipped"] else "#ef4444"
-            email = r.get("Contact Info", "") or r.get("contact_email", "") or "Unknown"
+            status = r.get("sent_status", "unknown").lower()
+            
+            # Color logic
+            if status == "success":
+                color = "#16a34a" # Green
+                bg = "#f0fdf4"
+            elif status in ["skipped", "user_skipped", "dry-run"]:
+                color = "#d97706" # Orange/Amber
+                bg = "#fffbe9"
+            else:
+                color = "#dc2626" # Red
+                bg = "#fef2f2"
+                
+            email = r.get("email") or r.get("Contact Info") or r.get("contact_email") or "Unknown"
+            company = r.get('Company') or r.get('Title') or 'N/A'
+            error_details = r.get('error', '')
             
             rows_html += f"""
-            <tr style="border-bottom: 1px solid #e5e7eb;">
-                <td style="padding: 12px;">{r.get('Company', 'N/A')}</td>
-                <td style="padding: 12px;">{email}</td>
-                <td style="padding: 12px;"><span style="background: {color}; color: white; padding: 4px 8px; border-radius: 9999px; font-size: 0.8em; font-weight: bold;">{status.upper()}</span></td>
-                <td style="padding: 12px; color: #6b7280; font-size: 0.9em;">{r.get('error', '')}</td>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 12px 15px; font-weight: 500; color: #1e293b;">{company}</td>
+                <td style="padding: 12px 15px; color: #64748b;">{email}</td>
+                <td style="padding: 12px 15px;">
+                    <span style="background-color: {bg}; color: {color}; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase;">{status}</span>
+                </td>
+                <td style="padding: 12px 15px; color: #94a3b8; font-size: 12px;">{error_details}</td>
             </tr>"""
 
-        # Build full HTML
+        # Build full HTML with premium design
         html_content = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>Raw_Positions_Auto_Apply Execution Report</title>
+    <meta charset="UTF-8">
+    <title>Execution Report - {base_name}</title>
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f9fafb; color: #111827; padding: 40px; margin: 0; }}
-        .container {{ max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }}
-        h1 {{ color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }}
-        .metrics {{ display: flex; gap: 20px; margin: 20px 0; }}
-        .metric-card {{ background: #f3f4f6; padding: 20px; border-radius: 8px; flex: 1; text-align: center; }}
-        .metric-card h3 {{ margin: 0; color: #6b7280; font-size: 0.9rem; text-transform: uppercase; }}
-        .metric-card p {{ margin: 10px 0 0 0; font-size: 2rem; font-weight: bold; color: #111827; }}
-        table {{ width: 100%; border-collapse: collapse; margin-top: 30px; }}
-        th {{ background: #f9fafb; padding: 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }}
+        body {{ font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 40px 20px; line-height: 1.5; }}
+        .container {{ max-width: 1000px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); overflow: hidden; }}
+        .header {{ padding: 30px; background: linear-gradient(135deg, #1e4eb8 0%, #3b82f6 100%); color: white; }}
+        .header h1 {{ margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }}
+        .header p {{ margin: 10px 0 0 0; opacity: 0.9; font-size: 14px; }}
+        .metrics {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #e2e8f0; border-bottom: 1px solid #e2e8f0; }}
+        .metric-card {{ background: white; padding: 25px 20px; text-align: center; }}
+        .metric-card h3 {{ margin: 0; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }}
+        .metric-card .val {{ font-size: 28px; font-weight: 800; color: #0f172a; }}
+        .table-container {{ padding: 20px; }}
+        table {{ width: 100%; border-collapse: collapse; text-align: left; }}
+        th {{ padding: 12px 15px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; background: #f8fafc; border-bottom: 2px solid #e2e8f0; }}
+        .footer {{ padding: 20px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #f1f5f9; }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Raw_Positions_Auto_Apply Run Report</h1>
-        <p style="color: #6b7280;">Execution Timestamp: {timestamp}</p>
+        <div class="header">
+            <p style="text-transform: uppercase; font-weight: 700; font-size: 10px; letter-spacing: 0.1em; margin-bottom: 5px; opacity: 0.8;">Automated Execution Log</p>
+            <h1>{base_name.replace('_', ' ').title()}</h1>
+            <p>Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')} • Timestamp: {timestamp}</p>
+        </div>
         
         <div class="metrics">
-            <div class="metric-card"><h3>Total Processed</h3><p>{len(results)}</p></div>
-            <div class="metric-card"><h3>Sent</h3><p style="color: #10b981;">{stats['sent']}</p></div>
-            <div class="metric-card"><h3>Skipped</h3><p style="color: #f59e0b;">{stats['skipped']}</p></div>
-            <div class="metric-card"><h3>Failed</h3><p style="color: #ef4444;">{stats['failed']}</p></div>
+            <div class="metric-card"><h3>Total</h3><div class="val">{total}</div></div>
+            <div class="metric-card"><h3>Sent</h3><div class="val" style="color: #16a34a;">{sent}</div></div>
+            <div class="metric-card"><h3>Skipped</h3><div class="val" style="color: #d97706;">{skipped}</div></div>
+            <div class="metric-card"><h3>Failed</h3><div class="val" style="color: #dc2626;">{failed}</div></div>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Company</th>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Details</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows_html}
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Company</th>
+                        <th style="width: 30%;">Recipient Email</th>
+                        <th style="width: 15%;">Status</th>
+                        <th>Details / Errors</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows_html}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            Execution Report generated by Raw_Positions_Auto_Apply System &copy; 2026
+        </div>
     </div>
 </body>
 </html>"""

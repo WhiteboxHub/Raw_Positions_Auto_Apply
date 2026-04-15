@@ -1,7 +1,9 @@
 import smtplib
 import os
+import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.policy import SMTP
 from datetime import datetime
 import logging
 
@@ -20,9 +22,18 @@ class RawPositionsAutoApplyReporter:
         self.port = 587
         
         # Recipients for the report
+        try:
+            from dotenv import load_dotenv
+            load_dotenv(override=True)
+            logger.debug("Reloaded environment variables for reporting.")
+        except ImportError:
+            pass
+
         email_to_raw = os.getenv("REPORT_EMAIL_TO")
         if email_to_raw:
-            self.email_to = [email.strip() for email in email_to_raw.split(',') if email.strip()]
+            # Handle comma separated list and trailing comments
+            clean_emails = email_to_raw.split('#')[0].strip()
+            self.email_to = [email.strip() for email in clean_emails.split(',') if email.strip()]
         else:
             self.email_to = []
 
@@ -70,7 +81,7 @@ class RawPositionsAutoApplyReporter:
             with smtplib.SMTP(self.server, self.port) as server:
                 server.starttls()
                 server.login(self.email_from, self.password)
-                server.sendmail(self.email_from, self.email_to, msg.as_string())
+                server.sendmail(self.email_from, self.email_to, msg.as_string(policy=SMTP))
             logger.info(f"Consolidated run report sent successfully to {len(self.email_to)} recipient(s).")
             return True
         except Exception as e:
@@ -239,6 +250,135 @@ class RawPositionsAutoApplyReporter:
             </table>
 """
 
+            # Add Candidate Breakdown Section
+            html += f"""
+            <div class="section-title">
+                <span>👤</span> Candidate Profile Breakdown
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">CANDIDATE</th>
+                        <th style="width: 25%;">EMAIL</th>
+                        <th style="text-align: center;">JOBS APPLIED (SENT)</th>
+                        <th style="text-align: center;">FAILED</th>
+                        <th style="text-align: center;">SKIPPED</th>
+                        <th style="text-align: right;">TOTAL PROCESSED</th>
+                    </tr>
+                </thead>
+                <tbody>
+"""
+            grand_total_sent = 0
+            grand_total_failed = 0
+            grand_total_skipped = 0
+            grand_total_processed = 0
+
+            for run in self.consolidated_data:
+                name = run.get('user_name', 'Unknown')
+                user_email = run.get('user_email', 'Unknown')
+                stats = run.get('stats', {})
+                results = run.get('results', [])
+                
+                sent = stats.get('sent', 0)
+                failed = stats.get('failed', 0)
+                skipped = stats.get('skipped', 0)
+                processed = len(results)
+                
+                grand_total_sent += sent
+                grand_total_failed += failed
+                grand_total_skipped += skipped
+                grand_total_processed += processed
+                
+                html += f"""
+                    <tr class="metric-row">
+                        <td class="metric-name">{name}</td>
+                        <td style="font-size: 13px; color: #64748b;"><a href="mailto:{user_email}" style="color: #3b82f6; text-decoration: none;">{user_email}</a></td>
+                        <td style="text-align: center; color: #16a34a; font-weight: 600;">{sent}</td>
+                        <td style="text-align: center; color: #dc2626;">{failed}</td>
+                        <td style="text-align: center; color: #f59e0b;">{skipped}</td>
+                        <td class="metric-val">{processed}</td>
+                    </tr>
+"""
+            
+            # Add Total Row
+            html += f"""
+                    <tr style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid #e2e8f0;">
+                        <td class="metric-name" style="color: #111;">TOTAL</td>
+                        <td style="color: #64748b; font-size: 11px;">-</td>
+                        <td style="text-align: center; color: #16a34a;">{grand_total_sent}</td>
+                        <td style="text-align: center; color: #dc2626;">{grand_total_failed}</td>
+                        <td style="text-align: center; color: #f59e0b;">{grand_total_skipped}</td>
+                        <td class="metric-val" style="color: #111;">{grand_total_processed}</td>
+                    </tr>
+                </tbody>
+            </table>
+"""
+
+            # Add Detailed Results Section (Success Details)
+            success_details = []
+            for run in self.consolidated_data:
+                user_name = run.get('user_name', 'Unknown')
+                results = run.get('results', [])
+                
+                # Collect details for successful sends: Company (Email)
+                successful_entries = []
+                for r in results:
+                    if r.get('sent_status') == 'success':
+                        company = r.get('Company') or r.get('Title') or 'Unknown Position'
+                        # Use standard 'email' key or fall back to common CSV header variants
+                        email_raw = (
+                            r.get('email') or 
+                            r.get('Contact Info') or 
+                            r.get('Contact Information') or 
+                            r.get('Recipient') or 
+                            r.get('email_address') or 
+                            'Unknown Email'
+                        )
+                        
+                        # Clean up: extract only the email address, removing "Email:" and "Phone:" tags
+                        email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+                        match = re.search(email_pattern, str(email_raw))
+                        email = match.group(0).strip() if match else str(email_raw).strip()
+
+                        successful_entries.append({
+                            "display": company,
+                            "email": email
+                        })
+                
+                if successful_entries:
+                    success_details.append({
+                        "name": user_name,
+                        "entries": successful_entries
+                    })
+
+            if success_details:
+                html += f"""
+            <div class="section-title">
+                <span>✅</span> Successful Recruiter Contacts
+            </div>
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 30px;">
+"""
+                for detail in success_details:
+                    html += f"""
+                <div style="margin-bottom: 20px;">
+                    <div style="color: #1e40af; font-size: 14px; font-weight: bold; border-bottom: 1px solid #dbeafe; padding-bottom: 5px; margin-bottom: 10px;">
+                        {detail['name']}
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+"""
+                    for entry in detail['entries']:
+                        html += f"""
+                        <div style="font-size: 12px; color: #475569; display: flex; align-items: center;">
+                            <span style="color: #16a34a; margin-right: 8px;">•</span>
+                            <strong style="color: #334155;">{entry['display']}</strong>
+                            <span style="margin: 0 8px; color: #cbd5e1;">|</span>
+                            <a href="mailto:{entry['email']}" style="color: #3b82f6; text-decoration: none;">{entry['email']}</a>
+                        </div>
+"""
+                    html += "                    </div>\n                </div>"
+                html += "            </div>"
+
             # Add Failed Candidates Section if any
             if failed_candidates_list:
                 html += f"""
@@ -284,7 +424,4 @@ class RawPositionsAutoApplyReporter:
             return subject, html
         except Exception as e:
             logger.error(f"Error generating HTML report: {e}", exc_info=True)
-            return None, None
-        except Exception as e:
-            logger.error(f"Error generating HTML report: {e}")
             return None, None

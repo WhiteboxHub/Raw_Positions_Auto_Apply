@@ -31,7 +31,7 @@ class CSVService:
         "part time", "part-time"
     ]
 
-    def __init__(self, input_dir: str, sent_emails_db: str, column_mapping: Optional[Dict[str, str]] = None, dry_run: bool = False, partition_config: Optional[Dict[str, int]] = None):
+    def __init__(self, input_dir: str, sent_emails_db: str, column_mapping: Optional[Dict[str, str]] = None, dry_run: bool = False, partition_config: Optional[Dict[str, int]] = None, force_resend: bool = False):
         """
         Initialize CSVService.
         
@@ -42,12 +42,14 @@ class CSVService:
                            e.g., {"email": "Email Address", "description": "Job Description"}
             dry_run: If True, skip duplicate checking
             partition_config: Optional dict with 'index' and 'total' for distributing load
+            force_resend: If True, ignore already_sent database check
         """
         self.input_dir = Path(input_dir)
         self.sent_emails_db = Path(sent_emails_db)
         self.column_mapping = column_mapping or {}
         self.dry_run = dry_run
         self.partition_config = partition_config
+        self.force_resend = force_resend
         self.sent_emails = self._load_sent_emails()
 
     def read_csv(self, filename: str, limit: Optional[int] = None) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
@@ -108,8 +110,9 @@ class CSVService:
                         })
                         continue
 
-                    # Check for duplicates (already sent or in current batch) - skip in dry-run mode
-                    if not self.dry_run and (self._is_duplicate(email) or email in seen_emails_in_batch):
+                    # Check for duplicates (already sent or in current batch) - skip in dry-run or force-resend mode
+                    allow_duplicates = self.dry_run or self.force_resend
+                    if not allow_duplicates and (self._is_duplicate(email) or email in seen_emails_in_batch):
                         skipped_rows.append({
                             "row": row_idx,
                             "email": email,

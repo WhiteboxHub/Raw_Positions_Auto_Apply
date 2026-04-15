@@ -12,9 +12,10 @@ Automated email generation and sending for job applications using local Ollama L
 - 🎯 **Batch & API Processing** — Process multiple job postings from CSV or dynamically fetch them each day via the Whitebox Learning API.
 - 👥 **Multi-Profile Support** — Run the system seamlessly for multiple users (e.g., `python run.py --user John`).
 - ⏱️ **Real-time Progress Tracking** — Terminal output now includes live **ETA and Remaining Time** estimates for every run.
-- 📊 **Premium Reporting** — Generates a high-end, consolidated HTML report with metric cards (Success, Failed, Extracted, Inserted) and unique Run IDs.
+- 📊 **Premium Reporting** — Generates a high-end, consolidated HTML report with metric cards (Success, Failed, Extracted, Inserted), recruiter contact tracking (grouped by candidate), and unique Run IDs.
 - 🌐 **Web-Based Orchestration** — Automatically pulls candidate profiles and credentials via API based on the `Run Raw Positions Workflow` flag on the marketing portal.
 - ✨ **AI/ML Validation** — Automatically skips job postings that do not pass AI/ML relevance checks.
+- 📎 **Resilient PDF Attachments** — Uses SMTP-standard CRLF line endings and proper MIME headers to guarantee that resumes never appear as corrupted in recruiter inboxes.
 
 ## Quick Start
 
@@ -109,15 +110,26 @@ python run.py --web --web-field my_custom_toggle
 
 _This mode automatically downloads resumes, fetches candidate-specific tokens, and cleans up temporary files after execution._
 
-### 4. Utility Commands
-
 ```bash
-# Fetch fresh jobs from API without running the full pipeline
-python run.py --fetch
-
 # Run with custom config file
 python run.py --config my_custom_config.yaml
 ```
+
+## Automation & Scheduling
+
+The project includes a PowerShell wrapper script designed to be run by the **Windows Task Scheduler** for hands-off daily automation.
+
+### Daily Schedule Script (`scripts/daily_schedule.ps1`)
+
+This script performs a full daily cycle for all local candidates:
+1.  **Token Refresh**: Runs `auto_login.py` to ensure Whitebox API sessions are active.
+2.  **Distributed Run**: Executes `run.py --fetch --run-all` which downloads the latest jobs and splits the workload across all candidate profiles in the `resume/` directory.
+3.  **Logging**: Appends execution status to `logs/scheduler.log`.
+
+To automate this:
+1. Open **Task Scheduler** on Windows.
+2. Create a new task that runs `powershell.exe -File "C:\path\to\project\scripts\daily_schedule.ps1"`.
+3. Set it to trigger daily at your preferred time (e.g., 9:00 AM).
 
 ## How It Works
 

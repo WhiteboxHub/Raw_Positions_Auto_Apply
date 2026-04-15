@@ -36,12 +36,14 @@ class ResumeHandler:
                 raw_data = json.load(f)
             
             name = ResumeHandler._extract_name(raw_data)
+            email = ResumeHandler._extract_email(raw_data)
             skills = ResumeHandler._extract_skills(raw_data)
             industry = ResumeHandler._extract_industry(raw_data)
             total_experience = raw_data.get("cv", {}).get("total_experience", "")
             
             resume.data = ResumeData(
                 name=name,
+                email=email,
                 total_experience=total_experience,
                 industry=industry,
                 skills=skills,
@@ -66,6 +68,18 @@ class ResumeHandler:
             logger.debug(f"Failed to extract name: {e}")
         
         return "Applicant"
+
+    @staticmethod
+    def _extract_email(resume_data: dict) -> str:
+        """Extract candidate email from resume."""
+        try:
+            email = resume_data.get("cv", {}).get("email", "")
+            if email:
+                return email
+        except Exception as e:
+            logger.debug(f"Failed to extract email: {e}")
+        
+        return "Unknown"
     
     @staticmethod
     def _extract_skills(resume_data: dict) -> list[str]:

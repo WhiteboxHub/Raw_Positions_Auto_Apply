@@ -200,10 +200,10 @@ class PreflightValidator:
         project_root = Path(__file__).resolve().parent.parent
 
         # Precedence: 
-        # 1. Environment Variable (may have been set by orchestrator for --user)
-        # 2. Config (explicitly set via --user or config.yaml)
+        # 1. Config (explicitly set via orchestrator, --user, or config.yaml)
+        # 2. Environment Variable (global fallback)
         # 3. Default auto-detection in project root
-        credentials_path = os.getenv("GMAIL_API_CREDENTIALS_PATH") or self.config.get("gmail", {}).get("credentials_path")
+        credentials_path = self.config.get("gmail", {}).get("credentials_path") or os.getenv("GMAIL_API_CREDENTIALS_PATH")
         
         if not credentials_path:
             json_files = list(project_root.glob("*.json"))
