@@ -1,5 +1,6 @@
 import smtplib
 import os
+import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.policy import SMTP
@@ -325,7 +326,21 @@ class RawPositionsAutoApplyReporter:
                 for r in results:
                     if r.get('sent_status') == 'success':
                         company = r.get('Company') or r.get('Title') or 'Unknown Position'
-                        email = r.get('email') or 'Unknown Email'
+                        # Use standard 'email' key or fall back to common CSV header variants
+                        email_raw = (
+                            r.get('email') or 
+                            r.get('Contact Info') or 
+                            r.get('Contact Information') or 
+                            r.get('Recipient') or 
+                            r.get('email_address') or 
+                            'Unknown Email'
+                        )
+                        
+                        # Clean up: extract only the email address, removing "Email:" and "Phone:" tags
+                        email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+                        match = re.search(email_pattern, str(email_raw))
+                        email = match.group(0).strip() if match else str(email_raw).strip()
+
                         successful_entries.append({
                             "display": company,
                             "email": email
@@ -409,7 +424,4 @@ class RawPositionsAutoApplyReporter:
             return subject, html
         except Exception as e:
             logger.error(f"Error generating HTML report: {e}", exc_info=True)
-            return None, None
-        except Exception as e:
-            logger.error(f"Error generating HTML report: {e}")
             return None, None

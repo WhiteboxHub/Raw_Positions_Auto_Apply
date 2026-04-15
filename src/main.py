@@ -174,7 +174,7 @@ def main():
             # Store data for consolidated report
             consolidated_data.append({
                 "user_name": orchestrator._user_name,
-                "user_email": orchestrator.config.get("gmail", {}).get("user_email", "Unknown"),
+                "user_email": orchestrator._user_email,
                 "stats": orchestrator._stats,
                 "results": orchestrator._csv_results
             })

@@ -76,11 +76,15 @@ class RawPositionsAutoApplyOrchestrator:
         
         config_data = workflow_manager.get_workflow_config(workflow_key)
         workflow_id = config_data.get("id", 0) if config_data else 0
-        run_id = workflow_manager.start_run(workflow_id=workflow_id, schedule_id=schedule_id)
+        run_id = workflow_manager.start_run(
+            workflow_id=workflow_id,
+            schedule_id=schedule_id
+        )
         
         self._stats = {"sent": 0, "failed": 0, "skipped": 0, "errors": []}
         self._csv_results = []
         self._user_name = "Unknown User"
+        self._user_email = "Unknown"
 
         try:
             if getattr(args, 'web', False):
@@ -94,7 +98,13 @@ class RawPositionsAutoApplyOrchestrator:
                 run_id=run_id,
                 status=final_status,
                 records_processed=self._stats["sent"] + self._stats["skipped"] + self._stats["failed"],
-                records_failed=self._stats["failed"]
+                records_failed=self._stats["failed"],
+                execution_metadata={
+                    "candidate_name": self._user_name,
+                    "candidate_email": self._user_email,
+                    "emails_sent": self._stats["sent"],
+                    "emails_skipped": self._stats["skipped"]
+                }
             )
             if schedule_id:
                 workflow_manager.update_schedule_status(schedule_id=schedule_id)
@@ -258,6 +268,7 @@ class RawPositionsAutoApplyOrchestrator:
         
         # Ensure the candidate's email is used as the primary email in config for this run
         if email:
+            self._user_email = email
             self.config.setdefault("gmail", {})["user_email"] = email
 
         return {
@@ -292,6 +303,10 @@ class RawPositionsAutoApplyOrchestrator:
         try:
             resume = ResumeHandler.load_resume(resume_json_path)
             self._user_name = resume.data.name
+            self._user_email = resume.data.email
+            
+            # Carry over to config for reporting
+            self.config.setdefault("gmail", {})["user_email"] = self._user_email
         except Exception as e:
             self.logger.error(f"Failed to load resume: {e}")
             return 1
@@ -610,6 +625,7 @@ class RawPositionsAutoApplyOrchestrator:
 
                                 self._csv_results.append({
                                     **row["raw_data"],
+                                    "email": email,
                                     "sent_status": "success",
                                     "sent_at": datetime.now().isoformat(),
                                     "message_id": message_id,

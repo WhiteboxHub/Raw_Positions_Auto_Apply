@@ -8,6 +8,7 @@ from typing import Dict, List, Any, Optional
 class ResumeData:
     """Resume information extracted from JSON."""
     name: str
+    email: str = ""
     total_experience: str = ""
     industry: str = ""
     skills: List[str] = field(default_factory=list)
