@@ -16,6 +16,10 @@ Automated email generation and sending for job applications using local Ollama L
 - 🌐 **Web-Based Orchestration** — Automatically pulls candidate profiles and credentials via API based on the `Run Raw Positions Workflow` flag on the marketing portal.
 - ✨ **AI/ML Validation** — Automatically skips job postings that do not pass AI/ML relevance checks.
 - 📎 **Resilient PDF Attachments** — Uses SMTP-standard CRLF line endings and proper MIME headers to guarantee that resumes never appear as corrupted in recruiter inboxes.
+- 🕒 **Security Fail-Safe** — If a profile fails authentication or encounters a fatal error, the tool automatically pauses for 10 minutes before moving to the next candidate to avoid triggering security blocks.
+- ⚖️ **Perfect Load Balancing** — Uses absolute CSV row-based partitioning to guarantee that multiple candidates never "double-send" to the same recruiter, regardless of their individual history.
+- 🚫 **Candidate Exclusions** — Exclude specific profiles dynamically from distributed runs via configuration.
+- 🕰️ **24-Hour Lookback Fetching** — Accurately grabs positions extracted within the last 24 hours (UTC-aware) to ensure comprehensive daily coverage.
 
 ## Quick Start
 
@@ -122,23 +126,25 @@ The project includes a PowerShell wrapper script designed to be run by the **Win
 ### Daily Schedule Script (`scripts/daily_schedule.ps1`)
 
 This script performs a full daily cycle for all local candidates:
+
 1.  **Token Refresh**: Runs `auto_login.py` to ensure Whitebox API sessions are active.
 2.  **Distributed Run**: Executes `run.py --fetch --run-all` which downloads the latest jobs and splits the workload across all candidate profiles in the `resume/` directory.
 3.  **Logging**: Appends execution status to `logs/scheduler.log`.
 
 To automate this:
+
 1. Open **Task Scheduler** on Windows.
 2. Create a new task that runs `powershell.exe -File "C:\path\to\project\scripts\daily_schedule.ps1"`.
 3. Set it to trigger daily at your preferred time (e.g., 9:00 AM).
 
 ## How It Works
 
-1. **Job Fetching:** Pulls daily job postings via Whitebox API (or reads a predefined CSV).
-2. **Filtering:** Applies sanitization filters to job titles (ignoring noise) and verifies AI/ML keywords. Removes duplicate recipient emails.
+1. **Job Fetching:** Pulls recent job postings from the last 24 hours via Whitebox API (or reads a predefined CSV).
+2. **Filtering:** Applies sanitization filters to job titles (ignoring noise) and verifies AI/ML keywords. Removes duplicate recipient emails. Excludes disallowed employment types or industries if configured.
 3. **Progress Initialization:** Starts a timer and calculates a conservative ETA based on your batch size.
 4. **Data Assembly:** Auto-detects your resume (JSON + PDF) based on the current `--user` or API data.
 5. **Generation:** Sends job descriptions + resume data to the local Ollama LLM. The LLM generates a personalized email matching your skills to the job.
-6. **Validation:** Checks if the generated email is professional, complete, and contains no hallucinated placeholders. 
+6. **Validation:** Checks if the generated email is professional, complete, and contains no hallucinated placeholders.
 7. **Sending:** Sends via Gmail API as HTML with the resume PDF attached, enforcing daily limits and anti-spam delays.
 8. **Reporting:** Generates a premium HTML report and sends it to your configured report recipients.
 
@@ -184,14 +190,18 @@ Raw_Positions_Auto_Apply/
 | `ollama.model`                                   | Local model (e.g., llama3.2:3b)   | `llama3.2:3b`                |
 | `ollama.timeout_seconds`                         | Strict max generation time        | `40`                         |
 | `gmail.cooldown_every_n_emails`                  | Anti-rate limiting chunks         | `10`                         |
+| `email_processing.candidate_error_delay_minutes` | Security pause on profile failure | `10`                         |
 | `web_extraction.enabled_field`                   | API field to trigger workflow     | `run_raw_positions_workflow` |
+| `resume.exclude_candidates`                      | List of candidate names to skip   | `[]`                         |
 
 ## Troubleshooting
 
 ### Progress Tracking
+
 If the ETA seems unusually high at first, don't worry—the system uses a conservative "warm-up" estimate that automatically corrects itself as soon as the first email is processed.
 
 ### No Valid Rows Found
+
 - Verify the jobs inside your CSV haven't already been emailed (check `data/sent_emails.json`).
 - Ensure the job titles/descriptions contain AI/ML related keywords, otherwise they are skipped automatically.
 - Check that the `Extracted At` date matches the current date if your SQL query filters by `CURDATE()`.

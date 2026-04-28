@@ -9,6 +9,7 @@ Usage:
 
 import argparse
 import sys
+import time
 import uuid
 from pathlib import Path
 
@@ -141,6 +142,21 @@ def main():
                 users = sort_candidates(users, priority_order)
                 print(f"Sorted users based on priority: {users}")
 
+        # Filter out excluded candidates (applies to --run-all, --users, and --user)
+        if any(isinstance(u, str) for u in users):
+            config_dict = config_dict or load_config(args.config).to_dict()
+            exclude_list = config_dict.get("resume", {}).get("exclude_candidates", [])
+            if exclude_list:
+                exclude_lower = [name.lower() for name in exclude_list]
+                before_count = len(users)
+                users = [
+                    u for u in users
+                    if u is None or not any(exc in u.lower() for exc in exclude_lower)
+                ]
+                skipped = before_count - len(users)
+                if skipped:
+                    print(f"⏭️  Excluded {skipped} candidate(s) from run: {exclude_list}")
+
         total_users = len(users)
         consolidated_data = []
         
@@ -169,8 +185,14 @@ def main():
                 "total": total_users
             }
 
-            exit_code = orchestrator.run(args)
-            
+            try:
+                exit_code = orchestrator.run(args)
+            except Exception as e:
+                print(f"Fatal error running pipeline for {user}: {e}")
+                import traceback
+                traceback.print_exc()
+                exit_code = 1
+
             # Store data for consolidated report
             consolidated_data.append({
                 "user_name": orchestrator._user_name,
@@ -179,11 +201,22 @@ def main():
                 "results": orchestrator._csv_results
             })
             
-            if exit_code != 0 and total_users == 1:
-                # If it's a single run and it errored, send report now
-                reporter = RawPositionsAutoApplyReporter(consolidated_data)
-                reporter.send_report()
-                sys.exit(exit_code)
+            if exit_code != 0:
+                if total_users == 1:
+                    # If it's a single run and it errored, send report and exit
+                    reporter = RawPositionsAutoApplyReporter(consolidated_data)
+                    reporter.send_report()
+                    sys.exit(exit_code)
+                elif idx < total_users - 1:
+                    # Distributed run: wait 10 minutes before next candidate on fatal error
+                    config_obj = load_config(args.config)
+                    delay_mins = config_obj.to_dict().get("email_processing", {}).get("candidate_error_delay_minutes", 10)
+                    
+                    print(f"\n[!] Profile run for {user} encountered errors (Exit Code: {exit_code}).")
+                    print(f"[!] Waiting {delay_mins} minutes before moving to the next candidate per security policy...")
+                    
+                    # Sleep in increments so it's interruptible if needed (optional, but good practice)
+                    time.sleep(delay_mins * 60)
                 
         # Dispatch consolidated report
         if consolidated_data:

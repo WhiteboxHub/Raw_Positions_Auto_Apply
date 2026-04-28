@@ -129,6 +129,22 @@ class RawPositionsAutoApplyOrchestrator:
                 candidates = sort_candidates(candidates, priority_order, name_key="full_name")
                 self.logger.info(f"Sorted candidates based on priority: {[c.get('full_name') for c in candidates]}")
 
+            # Filter out excluded candidates
+            exclude_list = self.config.get("resume", {}).get("exclude_candidates", [])
+            if exclude_list:
+                exclude_lower = [name.lower() for name in exclude_list]
+                before_count = len(candidates)
+                candidates = [
+                    c for c in candidates
+                    if not any(
+                        exc in (c.get("full_name") or c.get("candidate", {}).get("full_name", "")).lower()
+                        for exc in exclude_lower
+                    )
+                ]
+                skipped = before_count - len(candidates)
+                if skipped:
+                    self.logger.info(f"⏭️  Excluded {skipped} candidate(s) from run: {exclude_list}")
+
             overall_status = 0
             for idx, candidate in enumerate(candidates):
                 # Get name from nested candidate object or top level
@@ -154,9 +170,21 @@ class RawPositionsAutoApplyOrchestrator:
                     status = self._execute_pipeline(args)
                     if status != 0:
                         overall_status = status
+                        
+                        # Wait if there are more candidates
+                        if idx < len(candidates) - 1:
+                            delay_mins = self.config.get("email_processing", {}).get("candidate_error_delay_minutes", 10)
+                            self.logger.warning(f"\n[!] Profile run for {name} encountered errors (Status: {status}).")
+                            self.logger.warning(f"[!] Waiting {delay_mins} minutes before moving to the next candidate per security policy...")
+                            time.sleep(delay_mins * 60)
                 except Exception as e:
                     self.logger.error(f"Error running pipeline for {name}: {e}")
                     overall_status = 1
+                    
+                    if idx < len(candidates) - 1:
+                        delay_mins = self.config.get("email_processing", {}).get("candidate_error_delay_minutes", 10)
+                        self.logger.warning(f"[!] Waiting {delay_mins} minutes before next candidate after crash...")
+                        time.sleep(delay_mins * 60)
                 finally:
                     # Individual cleanup (resume PDF)
                     if temp_profile_paths.get("resume_pdf"):
@@ -291,6 +319,12 @@ class RawPositionsAutoApplyOrchestrator:
         # Load resume (auto-detect JSON by extension if not configured)
         resume_json_path = self.config.get("resume", {}).get("json_path")
         if not resume_json_path:
+            # If a user was specified but no resume path was set during CLI override,
+            # it means the user's directory exists but contains no .json file.
+            if getattr(args, 'user', None):
+                self.logger.error(f"No resume JSON found in resume/{args.user}/. Please check file naming.")
+                return 1
+
             resume_dir = Path("resume")
             json_files = list(resume_dir.glob("*.json")) if resume_dir.exists() else []
             if json_files:

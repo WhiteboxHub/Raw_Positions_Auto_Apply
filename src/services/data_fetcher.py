@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import requests
-from datetime import datetime, date
+from datetime import datetime, date, timedelta, timezone
 from pathlib import Path
 from typing import Dict, Any, List
 
@@ -53,7 +53,8 @@ class DataFetcherService:
         }
         
         all_jobs = []
-        today_date = date.today().isoformat() # E.g., '2026-04-06'
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(hours=24)
         
         try:
             while True:
@@ -75,11 +76,26 @@ class DataFetcherService:
                     
                 for item in items:
                     # Check extraction date (fields vary, so we check multiple common ones)
-                    extracted_at = item.get("extracted_at") or item.get("extraction_date") or item.get("processed_at") or ""
-                    
-                    # If it starts with today's date, we keep it
-                    if extracted_at.startswith(today_date):
-                        all_jobs.append(item)
+                    extracted_at_str = item.get("extracted_at") or item.get("extraction_date") or item.get("processed_at") or ""
+                    if not extracted_at_str:
+                        continue
+                        
+                    try:
+                        # Attempt to parse timestamp and check if within last 24h
+                        # Handle 'Z' for UTC if present (compatible with Python 3.10)
+                        ts = extracted_at_str.replace('Z', '+00:00')
+                        dt = datetime.fromisoformat(ts)
+                        
+                        # Make aware if naive
+                        if dt.tzinfo is None:
+                            dt = dt.replace(tzinfo=timezone.utc)
+                            
+                        if dt >= cutoff:
+                            all_jobs.append(item)
+                    except (ValueError, TypeError):
+                        # Fallback to simple date check if parsing fails
+                        if extracted_at_str.startswith(now.date().isoformat()):
+                            all_jobs.append(item)
                 
                 # Pagination
                 # Normally there is a "has_next" or we just check if we got full page
