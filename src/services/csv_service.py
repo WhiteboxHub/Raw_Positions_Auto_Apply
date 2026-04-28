@@ -136,7 +136,9 @@ class CSVService:
                 total = int(self.partition_config["total"])
                 index = int(self.partition_config["index"])
                 
-                my_partition = [row for i, row in enumerate(valid_rows) if i % total == index]
+                # Use row_index (the absolute CSV row number) for partitioning to ensure zero overlap 
+                # between candidates even if they have different local duplicate histories.
+                my_partition = [row for row in valid_rows if (row["row_index"] - 2) % total == index]
                 logger.info(f"Partition check: Total valid {len(valid_rows)}, this profile took {len(my_partition)} (idx {index} of {total})")
                 valid_rows = my_partition
                 

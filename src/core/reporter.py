@@ -135,56 +135,75 @@ class RawPositionsAutoApplyReporter:
 <html>
 <head>
     <style>
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f7f9; color: #333; }}
-        .header {{ background: linear-gradient(135deg, #1e4eb8 0%, #3b82f6 100%); color: white; padding: 40px 20px; text-align: left; border-radius: 8px 8px 0 0; }}
-        .header h1 {{ margin: 10px 0 5px 0; font-size: 28px; font-weight: bold; }}
-        .header p {{ margin: 0; font-size: 14px; opacity: 0.9; }}
-        .header .sub {{ font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }}
-        .content {{ padding: 30px; max-width: 900px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: -20px; }}
-        .intro-text {{ color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 25px; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 40px 20px; }}
+        .container {{ max-width: 950px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); overflow: hidden; }}
         
-        .cards {{ display: flex; justify-content: space-between; gap: 15px; margin-bottom: 30px; }}
-        .card {{ flex: 1; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }}
-        .card .val {{ font-size: 24px; font-weight: bold; display: block; margin-bottom: 5px; }}
-        .card .lab {{ font-size: 10px; font-weight: bold; text-transform: uppercase; color: #888; letter-spacing: 0.5px; }}
+        .header {{ background-color: #1f2937; color: #ffffff; padding: 40px 30px; text-align: center; border-bottom: 1px solid #374151; }}
+        .header .sub {{ font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af; margin-bottom: 8px; }}
+        .header h1 {{ margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }}
+        .header p {{ margin: 10px 0 0 0; font-size: 14px; color: #9ca3af; }}
         
-        .card-blue {{ background-color: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; }}
-        .card-green {{ background-color: #f0fdf4; border: 1px solid #dcfce7; color: #166534; }}
-        .card-red {{ background-color: #fef2f2; border: 1px solid #fee2e2; color: #991b1b; }}
-        .card-teal {{ background-color: #f0fdfa; border: 1px solid #ccfbf1; color: #115e59; }}
-        .card-orange {{ background-color: #fffbeb; border: 1px solid #fef3c7; color: #92400e; }}
+        .content {{ padding: 35px; }}
+        .intro-text {{ color: #4b5563; font-size: 15px; line-height: 1.6; margin-bottom: 35px; text-align: center; max-width: 700px; margin-left: auto; margin-right: auto; }}
         
-        .section-title {{ font-size: 18px; font-weight: bold; margin: 30px 0 15px 0; display: flex; align-items: center; color: #111; }}
-        .section-title span {{ margin-right: 10px; }}
+        .cards {{ display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 40px; }}
+        .card {{ flex: 1; min-width: 150px; padding: 25px 15px; border-radius: 12px; text-align: center; background-color: #f9fafb; border: 1px solid #e5e7eb; transition: all 0.2s ease; }}
+        .card .val {{ font-size: 32px; font-weight: 800; display: block; margin-bottom: 6px; letter-spacing: -1px; }}
+        .card .lab {{ font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; letter-spacing: 1px; }}
         
-        table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
-        th {{ background-color: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; text-align: left; padding: 12px 15px; border-bottom: 1px solid #e2e8f0; }}
-        td {{ padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }}
-        .metric-row:hover {{ background-color: #f8fafc; }}
-        .metric-name {{ color: #475569; }}
-        .metric-val {{ text-align: right; font-weight: 600; color: #1e293b; }}
+        .card-blue {{ border-top: 4px solid #3b82f6; }}
+        .card-blue .val {{ color: #2563eb; }}
+        .card-green {{ border-top: 4px solid #10b981; }}
+        .card-green .val {{ color: #059669; }}
+        .card-red {{ border-top: 4px solid #ef4444; }}
+        .card-red .val {{ color: #dc2626; }}
+        .card-teal {{ border-top: 4px solid #0d9488; }}
+        .card-teal .val {{ color: #0f766e; }}
+        .card-orange {{ border-top: 4px solid #f59e0b; }}
+        .card-orange .val {{ color: #d97706; }}
         
-        .failed-header {{ color: #dc2626; font-size: 16px; font-weight: bold; margin-bottom: 15px; }}
-        .failed-table th {{ background-color: #fef2f2; color: #991b1b; }}
-        .failed-table td {{ vertical-align: top; }}
-        .error-text {{ color: #dc2626; font-size: 12px; line-height: 1.4; }}
+        .section-title {{ font-size: 18px; font-weight: 700; margin: 40px 0 20px 0; display: flex; align-items: center; color: #111827; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px; }}
+        .section-title span {{ margin-right: 12px; font-size: 20px; }}
         
-        .footer {{ text-align: center; padding: 30px; font-size: 12px; color: #94a3b8; line-height: 1.8; }}
-        .footer .run-it {{ font-family: monospace; color: #cbd5e1; margin-top: 10px; display: block; }}
+        .table-container {{ border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 30px; }}
+        table {{ width: 100%; border-collapse: collapse; }}
+        th {{ background-color: #f9fafb; color: #374151; font-size: 12px; text-transform: uppercase; font-weight: 700; text-align: left; padding: 15px 20px; border-bottom: 1px solid #e5e7eb; }}
+        td {{ padding: 15px 20px; font-size: 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }}
+        tr:last-child td {{ border-bottom: none; }}
+        
+        .metric-row:hover {{ background-color: #f9fafb; }}
+        .metric-name {{ color: #374151; font-weight: 600; }}
+        .metric-val {{ text-align: right; font-weight: 700; color: #111827; }}
+        
+        .failed-header {{ color: #dc2626; font-size: 18px; font-weight: 700; margin: 40px 0 20px 0; }}
+        .failed-table th {{ background-color: #fff1f2; color: #991b1b; }}
+        .error-text {{ color: #dc2626; font-size: 13px; line-height: 1.5; font-weight: 500; }}
+        
+        .contact-group {{ background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 25px; margin-bottom: 30px; }}
+        .contact-name {{ color: #1e40af; font-size: 15px; font-weight: 700; border-bottom: 1px solid #dbeafe; padding-bottom: 8px; margin-bottom: 15px; }}
+        .contact-grid {{ display: grid; grid-template-columns: 1fr; gap: 10px; }}
+        .contact-item {{ font-size: 13px; display: flex; align-items: center; }}
+        .contact-item .bullet {{ color: #10b981; margin-right: 10px; font-size: 16px; }}
+        
+        .footer {{ text-align: center; padding: 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 13px; }}
+        .footer .run-it {{ font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 11px; color: #9ca3af; margin-top: 12px; display: block; }}
+        
+        a {{ color: #3b82f6; text-decoration: none; font-weight: 500; }}
+        a:hover {{ text-decoration: underline; }}
     </style>
 </head>
 <body>
-    <div style="max-width: 900px; margin: 20px auto;">
+    <div class="container">
         <div class="header">
             <div class="sub">WHITEBOX LEARNING</div>
             <h1>Raw Positions Auto Apply Report</h1>
-            <p>Run completed on {date_str} at {time_str}</p>
+            <p>Run completed on <strong>{date_str}</strong> at <strong>{time_str}</strong></p>
         </div>
         
         <div class="content">
             <p class="intro-text">
-                This report summarises the email application run that processed all active candidates. 
-                The run completed in the expected window with the following overall metrics.
+                This report summarizes the email application run that processed all active candidates. 
+                The automation completed successfully with the following performance metrics.
             </p>
             
             <div class="cards">
@@ -206,68 +225,67 @@ class RawPositionsAutoApplyReporter:
                 </div>
                 <div class="card card-orange">
                     <span class="val">{total_inserted}</span>
-                    <span class="lab">INSERTED (NEW)</span>
+                    <span class="lab">INSERTED</span>
                 </div>
             </div>
             
             <div class="section-title">
-                <span>📊</span> Run Overview
+                <span>📊</span> Performance Overview
             </div>
             
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 70%;">METRIC</th>
-                        <th style="text-align: right;">VALUE</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="metric-row">
-                        <td class="metric-name">Total Candidates Processed</td>
-                        <td class="metric-val">{total_candidates}</td>
-                    </tr>
-                    <tr class="metric-row">
-                        <td class="metric-name">Successful Candidates</td>
-                        <td class="metric-val" style="color: #16a34a;">{successful_candidates_count}</td>
-                    </tr>
-                    <tr class="metric-row">
-                        <td class="metric-name">Failed Candidates</td>
-                        <td class="metric-val" style="color: #dc2626;">{failed_candidates_count}</td>
-                    </tr>
-                    <tr class="metric-row">
-                        <td class="metric-name">Contacts Extracted (Passed Filters)</td>
-                        <td class="metric-val" style="color: #0d9488;">{total_extracted}</td>
-                    </tr>
-                    <tr class="metric-row">
-                        <td class="metric-name">Contacts Inserted (New to DB)</td>
-                        <td class="metric-val" style="color: #ea580c;">{total_inserted}</td>
-                    </tr>
-                    <tr class="metric-row">
-                        <td class="metric-name">Success Rate</td>
-                        <td class="metric-val" style="color: #2563eb;">{success_rate:.0f}%</td>
-                    </tr>
-                </tbody>
-            </table>
-"""
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 70%;">Metric</th>
+                            <th style="text-align: right;">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="metric-row">
+                            <td class="metric-name">Total Candidates Processed</td>
+                            <td class="metric-val">{total_candidates}</td>
+                        </tr>
+                        <tr class="metric-row">
+                            <td class="metric-name">Successful Candidates</td>
+                            <td class="metric-val" style="color: #16a34a;">{successful_candidates_count}</td>
+                        </tr>
+                        <tr class="metric-row">
+                            <td class="metric-name">Failed Candidates</td>
+                            <td class="metric-val" style="color: #dc2626;">{failed_candidates_count}</td>
+                        </tr>
+                        <tr class="metric-row">
+                            <td class="metric-name">Contacts Extracted (Passed Filters)</td>
+                            <td class="metric-val" style="color: #0d9488;">{total_extracted}</td>
+                        </tr>
+                        <tr class="metric-row">
+                            <td class="metric-name">Contacts Inserted (New to DB)</td>
+                            <td class="metric-val" style="color: #ea580c;">{total_inserted}</td>
+                        </tr>
+                        <tr class="metric-row">
+                            <td class="metric-name">Overall Success Rate</td>
+                            <td class="metric-val" style="color: #2563eb;">{success_rate:.0f}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-            # Add Candidate Breakdown Section
-            html += f"""
             <div class="section-title">
                 <span>👤</span> Candidate Profile Breakdown
             </div>
             
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 20%;">CANDIDATE</th>
-                        <th style="width: 25%;">EMAIL</th>
-                        <th style="text-align: center;">JOBS APPLIED (SENT)</th>
-                        <th style="text-align: center;">FAILED</th>
-                        <th style="text-align: center;">SKIPPED</th>
-                        <th style="text-align: right;">TOTAL PROCESSED</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th style="text-align: center;">Sent</th>
+                            <th style="text-align: center;">Failed</th>
+                            <th style="text-align: center;">Skipped</th>
+                            <th style="text-align: right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
 """
             grand_total_sent = 0
             grand_total_failed = 0
@@ -291,28 +309,30 @@ class RawPositionsAutoApplyReporter:
                 grand_total_processed += processed
                 
                 html += f"""
-                    <tr class="metric-row">
-                        <td class="metric-name">{name}</td>
-                        <td style="font-size: 13px; color: #64748b;"><a href="mailto:{user_email}" style="color: #3b82f6; text-decoration: none;">{user_email}</a></td>
-                        <td style="text-align: center; color: #16a34a; font-weight: 600;">{sent}</td>
-                        <td style="text-align: center; color: #dc2626;">{failed}</td>
-                        <td style="text-align: center; color: #f59e0b;">{skipped}</td>
-                        <td class="metric-val">{processed}</td>
-                    </tr>
+                        <tr class="metric-row">
+                            <td>
+                                <div class="metric-name">{name}</div>
+                                <div style="font-size: 11px;"><a href="mailto:{user_email}">{user_email}</a></div>
+                            </td>
+                            <td style="text-align: center; color: #16a34a; font-weight: 700;">{sent}</td>
+                            <td style="text-align: center; color: #dc2626;">{failed}</td>
+                            <td style="text-align: center; color: #f59e0b;">{skipped}</td>
+                            <td style="text-align: right; font-weight: 700; color: #111827;">{processed}</td>
+                        </tr>
 """
             
             # Add Total Row
             html += f"""
-                    <tr style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid #e2e8f0;">
-                        <td class="metric-name" style="color: #111;">TOTAL</td>
-                        <td style="color: #64748b; font-size: 11px;">-</td>
-                        <td style="text-align: center; color: #16a34a;">{grand_total_sent}</td>
-                        <td style="text-align: center; color: #dc2626;">{grand_total_failed}</td>
-                        <td style="text-align: center; color: #f59e0b;">{grand_total_skipped}</td>
-                        <td class="metric-val" style="color: #111;">{grand_total_processed}</td>
-                    </tr>
-                </tbody>
-            </table>
+                        <tr style="background-color: #f9fafb; font-weight: 800; border-top: 2px solid #e5e7eb;">
+                            <td class="metric-name" style="color: #111827;">TOTAL SUM</td>
+                            <td style="text-align: center; color: #16a34a;">{grand_total_sent}</td>
+                            <td style="text-align: center; color: #dc2626;">{grand_total_failed}</td>
+                            <td style="text-align: center; color: #f59e0b;">{grand_total_skipped}</td>
+                            <td style="text-align: right; color: #111827;">{grand_total_processed}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 """
 
             # Add Detailed Results Section (Success Details)
@@ -321,12 +341,10 @@ class RawPositionsAutoApplyReporter:
                 user_name = run.get('user_name', 'Unknown')
                 results = run.get('results', [])
                 
-                # Collect details for successful sends: Company (Email)
                 successful_entries = []
                 for r in results:
                     if r.get('sent_status') == 'success':
                         company = r.get('Company') or r.get('Title') or 'Unknown Position'
-                        # Use standard 'email' key or fall back to common CSV header variants
                         email_raw = (
                             r.get('email') or 
                             r.get('Contact Info') or 
@@ -336,7 +354,6 @@ class RawPositionsAutoApplyReporter:
                             'Unknown Email'
                         )
                         
-                        # Clean up: extract only the email address, removing "Email:" and "Phone:" tags
                         email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
                         match = re.search(email_pattern, str(email_raw))
                         email = match.group(0).strip() if match else str(email_raw).strip()
@@ -357,27 +374,23 @@ class RawPositionsAutoApplyReporter:
             <div class="section-title">
                 <span>✅</span> Successful Recruiter Contacts
             </div>
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 30px;">
 """
                 for detail in success_details:
                     html += f"""
-                <div style="margin-bottom: 20px;">
-                    <div style="color: #1e40af; font-size: 14px; font-weight: bold; border-bottom: 1px solid #dbeafe; padding-bottom: 5px; margin-bottom: 10px;">
-                        {detail['name']}
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+            <div class="contact-group">
+                <div class="contact-name">{detail['name']}</div>
+                <div class="contact-grid">
 """
                     for entry in detail['entries']:
                         html += f"""
-                        <div style="font-size: 12px; color: #475569; display: flex; align-items: center;">
-                            <span style="color: #16a34a; margin-right: 8px;">•</span>
-                            <strong style="color: #334155;">{entry['display']}</strong>
-                            <span style="margin: 0 8px; color: #cbd5e1;">|</span>
-                            <a href="mailto:{entry['email']}" style="color: #3b82f6; text-decoration: none;">{entry['email']}</a>
-                        </div>
+                    <div class="contact-item">
+                        <span class="bullet">•</span>
+                        <strong style="color: #334155; margin-right: 8px;">{entry['display']}</strong>
+                        <span style="color: #cbd5e1; margin-right: 8px;">|</span>
+                        <a href="mailto:{entry['email']}">{entry['email']}</a>
+                    </div>
 """
-                    html += "                    </div>\n                </div>"
-                html += "            </div>"
+                    html += "                </div>\n            </div>"
 
             # Add Failed Candidates Section if any
             if failed_candidates_list:
@@ -386,27 +399,30 @@ class RawPositionsAutoApplyReporter:
                 ❌ Failed Candidates ({len(failed_candidates_list)})
             </div>
             
-            <table class="failed-table">
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">NAME</th>
-                        <th style="width: 30%;">EMAIL</th>
-                        <th>ERROR / CAUSE</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div class="table-container">
+                <table class="failed-table">
+                    <thead>
+                        <tr>
+                            <th>Name / Email</th>
+                            <th>Error / Cause</th>
+                        </tr>
+                    </thead>
+                    <tbody>
 """
                 for fc in failed_candidates_list:
                     html += f"""
-                    <tr>
-                        <td>{fc['name']}</td>
-                        <td><a href="mailto:{fc['email']}" style="color: #3b82f6; text-decoration: none;">{fc['email']}</a></td>
-                        <td class="error-text">{fc['error']}</td>
-                    </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name">{fc['name']}</div>
+                                <div style="font-size: 11px;"><a href="mailto:{fc['email']}">{fc['email']}</a></div>
+                            </td>
+                            <td class="error-text">{fc['error']}</td>
+                        </tr>
 """
                 html += """
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
 """
 
             html += f"""
@@ -414,7 +430,7 @@ class RawPositionsAutoApplyReporter:
         
         <div class="footer">
             This is an automated report generated by the WBL Email Extraction System.<br>
-            <span class="run-it">Run ID: {self.run_id}</span>
+            <span class="run-it">RUN ID: {self.run_id}</span>
         </div>
     </div>
 </body>
